@@ -1,2 +1,2 @@
-# docgrep-java
-Java implementation of DocGrep.
+# drex-java
+Java implementation of Drex
