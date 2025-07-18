@@ -26,6 +26,20 @@ dependencies {
     implementation 'com.networknt:json-schema-validator:1.0.90'
 }
 ```
+## Pattern Structure
+
+Every Drex pattern is a **JSON object** with:
+- Optional `version` and `name` metadata.
+- An `elements` array, which holds the actual matching logic.
+
+`elements` can include any combination of these node types:
+- `line`
+- `group`
+- `repeat`
+- `or`
+- `anyline`
+
+Composite nodes (`group`, `repeat`, `or`) also have their own `elements` arrays for their children.
 
 ## Basic Example
 
@@ -40,25 +54,29 @@ Total: 6.99
 And a Drex pattern (JSON):
 ```json
 {
-  "pattern": {
-    "group": {
-      "bind": "invoice",
-      "children": [
-        { "line": { "regex": "Invoice #(\\d+)", "bind": "id" } },
-        {
-          "repeat": {
-            "bind": "items[]",
-            "mode": "oneOrMore",
-            "line": {
-              "regex": "(\\S+)\\s+(\\d+)\\s+([\\d\\.]+)",
-              "bind": ["name", "qty", "price"]
-            }
-          }
-        },
-        { "line": { "regex": "Total: ([\\d\\.]+)", "bind": "total" } }
-      ]
-    }
-  }
+  "version": "1.0",
+  "name": "InvoicePattern",
+  "elements": [
+    { "group": {
+        "bind": "invoice",
+        "elements": [
+          { "line": { "regex": "Invoice #(\\d+)", "bind": "id" } },
+          { "repeat": {
+              "bind": "items[]",
+              "mode": "oneOrMore",
+              "elements": [
+                { "line": { "regex": "(\\S+)\\s+(\\d+)\\s+([\\d\\.]+)", "bind": ["name","qty","price"] } }
+              ]
+          }},
+          { "or": {
+              "elements": [
+                { "line": { "regex": "Total: ([\\d\\.]+)", "bind": "total" } },
+                { "anyline": {} }
+              ]
+          }}
+        ]
+    }}
+  ]
 }
 ```
 
