@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Drex Pattern Schema",
+  "description": "Schema for Drex document extraction patterns.",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "elements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/patternNode"
+      }
+    }
+  },
+  "required": [
+    "elements"
+  ],
+  "$defs": {
+    "groupNode": {
+      "type": "object",
+      "properties": {
+        "bind": {
+          "type": "string"
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/patternNode"
+          }
+        }
+      },
+      "required": [
+        "elements"
+      ]
+    },
+    "repeatNode": {
+      "type": "object",
+      "properties": {
+        "bind": {
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "zeroOrMore",
+            "oneOrMore",
+            "zeroOrOne"
+          ]
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/patternNode"
+          }
+        }
+      },
+      "required": [
+        "mode",
+        "elements"
+      ]
+    },
+    "orNode": {
+      "type": "object",
+      "properties": {
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/patternNode"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "elements"
+      ]
+    },
+    "lineNode": {
+      "type": "object",
+      "properties": {
+        "regex": {
+          "type": "string"
+        },
+        "bind": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "convert": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ]
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "convert": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
+              ]
+            }
+          ]
+        }
+      },
+      "required": [
+        "regex"
+      ]
+    },
+    "anylineNode": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "patternNode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "group"
+          ],
+          "properties": {
+            "group": {
+              "$ref": "#/$defs/groupNode"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "repeat"
+          ],
+          "properties": {
+            "repeat": {
+              "$ref": "#/$defs/repeatNode"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "or"
+          ],
+          "properties": {
+            "or": {
+              "$ref": "#/$defs/orNode"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "line"
+          ],
+          "properties": {
+            "line": {
+              "$ref": "#/$defs/lineNode"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "anyline"
+          ],
+          "properties": {
+            "anyline": {
+              "$ref": "#/$defs/anylineNode"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
