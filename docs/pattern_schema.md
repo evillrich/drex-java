@@ -2,9 +2,9 @@
 
 A Drex pattern must be a JSON object with:
 - Optional `version` and `name` metadata.
-- An `elements` array holding the actual matching nodes.
+- A `tokens` array holding the actual matching nodes.
 
-Composite nodes (`group`, `repeat`, `or`) also contain `elements` arrays for their children.
+Composite nodes (`group`, `repeat`, `or`) also contain `tokens` arrays for their children.
 
 See `pattern-schema.json` for the full machine-readable schema.
 
@@ -13,11 +13,11 @@ See `pattern-schema.json` for the full machine-readable schema.
 {
   "version": "1.0",
   "name": "InvoicePattern",
-  "elements": [
+  "tokens": [
     { "line": { "regex": "Header (.*)", "bind": "header" } },
     { "group": {
         "bind": "invoice",
-        "elements": [
+        "tokens": [
           { "line": { "regex": "Invoice #(\\d+)", "bind": "id" } }
         ]
     }}
