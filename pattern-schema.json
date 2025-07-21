@@ -10,7 +10,7 @@
     "name": {
       "type": "string"
     },
-    "elements": {
+    "tokens": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/patternNode"
@@ -18,7 +18,7 @@
     }
   },
   "required": [
-    "elements"
+    "tokens"
   ],
   "$defs": {
     "groupNode": {
@@ -27,7 +27,7 @@
         "bind": {
           "type": "string"
         },
-        "elements": {
+        "tokens": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/patternNode"
@@ -35,7 +35,7 @@
         }
       },
       "required": [
-        "elements"
+        "tokens"
       ]
     },
     "repeatNode": {
@@ -51,7 +51,7 @@
             "zeroOrOne"
           ]
         },
-        "elements": {
+        "tokens": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/patternNode"
@@ -75,7 +75,7 @@
         }
       },
       "required": [
-        "elements"
+        "tokens"
       ]
     },
     "lineNode": {

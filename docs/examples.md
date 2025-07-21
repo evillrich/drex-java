@@ -1,6 +1,6 @@
 # Examples
 
-Drex pattern examples with top-level `elements`.
+Drex pattern examples with top-level `tokens`.
 
 ## Invoice Example
 
@@ -17,20 +17,20 @@ Total: 6.99
 {
   "version": "1.0",
   "name": "InvoicePattern",
-  "elements": [
+  "tokens": [
     { "group": {
         "bind": "invoice",
-        "elements": [
+        "tokens": [
           { "line": { "regex": "Invoice #(\\d+)", "bind": "id" } },
           { "repeat": {
               "bind": "items[]",
               "mode": "oneOrMore",
-              "elements": [
+              "tokens": [
                 { "line": { "regex": "(\\S+)\\s+(\\d+)\\s+([\\d\\.]+)", "bind": ["name","qty","price"] } }
               ]
           }},
           { "or": {
-              "elements": [
+              "tokens": [
                 { "line": { "regex": "Total: ([\\d\\.]+)", "bind": "total" } },
                 { "anyline": {} }
               ]
