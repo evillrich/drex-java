@@ -24,6 +24,10 @@
       "items": {
         "$ref": "#/$defs/patternNode"
       }
+    },
+    "bind": {
+      "type": "string",
+      "description": "Optional object to bind to. If present, the entire matched document binds under this key. Behaves like a group bind at the top level."
     }
   },
   "required": [

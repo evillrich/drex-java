@@ -1,0 +1,84 @@
+classDiagram
+    class PatternNode {
+        <<abstract>>
+        -string comment
+        +getComment() string
+    }
+
+    class CompositePatternNode {
+        <<abstract>>
+        -string bind
+        -PatternNode[] tokens
+        +getBind() string
+        +getTokens() PatternNode[]
+    }
+
+    class DrexPattern {
+        -string version
+        -string name
+        -integer editDistance
+        +getVersion() string
+        +getName() string
+        +getEditDistance() integer
+        +accept(visitor)
+    }
+
+    class Group {
+        +accept(visitor)
+    }
+
+    class Repeat {
+        -RepeatMode mode
+        +getMode() RepeatMode
+        +accept(visitor)
+    }
+
+    class Or {
+        +accept(visitor)
+    }
+
+    class Line {
+        -string regex
+        -BindConfig bind
+        +getRegex() string
+        +getBind() BindConfig
+        +accept(visitor)
+    }
+
+    class Anyline {
+        -string bind
+        +getBind() string
+        +accept(visitor)
+    }
+
+    class RepeatMode {
+        <<enumeration>>
+        zeroOrMore
+        oneOrMore
+        zeroOrOne
+    }
+
+    class BindConfig {
+        -string path
+        -string format
+        +getPath() string
+        +getFormat() string
+    }
+
+%% Relationships
+    PatternNode <|-- CompositePatternNode : extends
+    PatternNode <|-- Line : extends
+    PatternNode <|-- Anyline : extends
+
+    CompositePatternNode <|-- DrexPattern : extends
+    CompositePatternNode <|-- Group : extends
+    CompositePatternNode <|-- Repeat : extends
+    CompositePatternNode <|-- Or : extends
+
+    CompositePatternNode "1" *-- "many" PatternNode : contains
+
+    RepeatNode --> RepeatMode : uses
+    LineNode "1" *-- "0..many" BindConfig : bind
+
+%% Self-referencing for recursive structure
+    PatternNode ..> PatternNode : references
