@@ -1,16 +1,16 @@
 classDiagram
-    class PatternNode {
+    class PatternElement {
         <<abstract>>
         -string comment
         +getComment() string
     }
 
-    class CompositePatternNode {
+    class CompositePatternElement {
         <<abstract>>
         -string bind
-        -PatternNode[] tokens
+        -PatternElement[] elements
         +getBind() string
-        +getTokens() PatternNode[]
+        +getElements() PatternElement[]
     }
 
     class DrexPattern {
@@ -37,6 +37,13 @@ classDiagram
         +accept(visitor)
     }
 
+    class LineElement {
+        <<abstract>>
+        -string bind
+        +getBind() string
+        +accept(visitor)
+    }
+
     class Line {
         -string regex
         -BindConfig bind
@@ -46,8 +53,6 @@ classDiagram
     }
 
     class Anyline {
-        -string bind
-        +getBind() string
         +accept(visitor)
     }
 
@@ -66,19 +71,21 @@ classDiagram
     }
 
 %% Relationships
-    PatternNode <|-- CompositePatternNode : extends
-    PatternNode <|-- Line : extends
-    PatternNode <|-- Anyline : extends
+    PatternElement <|-- CompositePatternElement : extends
+    PatternElement <|-- LineElement : extends
 
-    CompositePatternNode <|-- DrexPattern : extends
-    CompositePatternNode <|-- Group : extends
-    CompositePatternNode <|-- Repeat : extends
-    CompositePatternNode <|-- Or : extends
+    CompositePatternElement <|-- DrexPattern : extends
+    CompositePatternElement <|-- Group : extends
+    CompositePatternElement <|-- Repeat : extends
+    CompositePatternElement <|-- Or : extends
 
-    CompositePatternNode "1" *-- "many" PatternNode : contains
+    LineElement <|-- Line : extends
+    LineElement <|-- Anyline : extends
 
-    RepeatNode --> RepeatMode : uses
-    LineNode "1" *-- "0..many" BindConfig : bind
+    CompositePatternElement "1" *-- "many" PatternElement : contains
+
+    Repeat --> RepeatMode : uses
+    Line "1" *-- "0..many" BindConfig : bind
 
 %% Self-referencing for recursive structure
-    PatternNode ..> PatternNode : references
+    PatternElement ..> PatternElement : references

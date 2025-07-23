@@ -1,6 +1,6 @@
 # Examples
 
-Drex pattern examples with top-level `tokens`.
+Drex pattern examples
 
 ## Simple Invoice Example
 
@@ -17,20 +17,24 @@ Total: 6.99
 {
   "version": "1.0",
   "name": "InvoicePattern",
-  "tokens": [
+  "comment": "Simple invoice extraction pattern",
+  "elements": [
     { "group": {
         "bind": "invoice",
-        "tokens": [
-          { "line": { "regex": "Invoice #(\\d+)", "bind": "id" } },
+        "comment": "Group all invoice data",
+        "elements": [
+          { "line": { "regex": "Invoice #(\\d+)", "bind": "id", "comment": "Extract invoice number" } },
           { "repeat": {
               "bind": "items[]",
               "mode": "oneOrMore",
-              "tokens": [
-                { "line": { "regex": "(\\S+)\\s+(\\d+)\\s+([\\d\\.]+)", "bind": ["name","qty","price"] } }
+              "comment": "Extract line items",
+              "elements": [
+                { "line": { "regex": "(\\S+)\\s+(\\d+)\\s+([\\d\\.]+)", "bind": ["name","qty","price"], "comment": "Item name, quantity, price" } }
               ]
           }},
           { "or": {
-              "tokens": [
+              "comment": "Match total or skip line",
+              "elements": [
                 { "line": { "regex": "Total: ([\\d\\.]+)", "bind": "total" } },
                 { "anyline": {} }
               ]
@@ -77,25 +81,28 @@ Total: 1107.53
 {
   "version": "1.0",
   "name": "TableInvoicePattern",
-  "tokens": [
+  "comment": "Invoice pattern for tabular format",
+  "elements": [
     { "group": {
         "bind": "invoice",
-        "tokens": [
-          { "line": { "regex": "Invoice #(\\d+)", "bind": "id" } },
-          { "line": { "regex": "Date: (\\d{4}-\\d{2}-\\d{2})", "bind": "date" } },
-          { "anyline": {} },
-          { "line": { "regex": "Item\\tQuantity\\tUnit Price\\tTotal" } },
+        "comment": "Main invoice container",
+        "elements": [
+          { "line": { "regex": "Invoice #(\\d+)", "bind": "id", "comment": "Invoice ID" } },
+          { "line": { "regex": "Date: (\\d{4}-\\d{2}-\\d{2})", "bind": "date", "comment": "Invoice date in YYYY-MM-DD format" } },
+          { "anyline": { "comment": "Skip blank line" } },
+          { "line": { "regex": "Item\\tQuantity\\tUnit Price\\tTotal", "comment": "Table header" } },
           { "repeat": {
               "bind": "items[]",
               "mode": "oneOrMore",
-              "tokens": [
-                { "line": { "regex": "([^\\t]+)\\t(\\d+)\\t([\\d\\.]+)\\t([\\d\\.]+)", "bind": ["item","quantity","unitPrice","total"] } }
+              "comment": "Extract table rows",
+              "elements": [
+                { "line": { "regex": "([^\\t]+)\\t(\\d+)\\t([\\d\\.]+)\\t([\\d\\.]+)", "bind": ["item","quantity","unitPrice","total"], "comment": "Tab-separated item details" } }
               ]
           }},
-          { "anyline": {} },
+          { "anyline": { "comment": "Skip blank line before totals" } },
           { "line": { "regex": "Subtotal: ([\\d\\.]+)", "bind": "subtotal" } },
           { "line": { "regex": "Tax: ([\\d\\.]+)", "bind": "tax" } },
-          { "line": { "regex": "Total: ([\\d\\.]+)", "bind": "total" } }
+          { "line": { "regex": "Total: ([\\d\\.]+)", "bind": "total", "comment": "Final total amount" } }
         ]
     }}
   ]
