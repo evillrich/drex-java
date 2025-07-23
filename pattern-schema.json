@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Drex Pattern Schema",
-  "description": "Schema for Drex document extraction patterns.",
+  "description": "Schema for Drex document extraction patterns. Drex is a line-oriented pattern matching language for extracting structured data from semi-structured text documents. It processes documents line by line, similar to how regular expressions process character streams, with support for fuzzy matching to handle OCR noise and document variations.",
   "type": "object",
   "properties": {
     "version": {
@@ -9,6 +9,15 @@
     },
     "name": {
       "type": "string"
+    },
+    "comment": {
+      "type": "string",
+      "description": "Optional description of what this pattern extracts and its purpose"
+    },
+    "editDistance": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Maximum edit distance allowed for fuzzy matching. Default is 0 (exact matching)."
     },
     "tokens": {
       "type": "array",
@@ -23,7 +32,11 @@
   "$defs": {
     "groupNode": {
       "type": "object",
+      "description": "Groups pattern nodes for sequential matching, similar to parentheses '()' in regex",
       "properties": {
+        "comment": {
+          "type": "string"
+        },
         "bind": {
           "type": "string"
         },
@@ -36,11 +49,16 @@
       },
       "required": [
         "tokens"
-      ]
+      ],
+      "additionalProperties": false
     },
     "repeatNode": {
       "type": "object",
+      "description": "Repeats pattern nodes with specified repetition mode, similar to quantifiers '*', '+', '?' in regex",
       "properties": {
+        "comment": {
+          "type": "string"
+        },
         "bind": {
           "type": "string"
         },
@@ -49,7 +67,8 @@
             "zeroOrMore",
             "oneOrMore",
             "zeroOrOne"
-          ]
+          ],
+          "description": "Repetition mode: 'zeroOrMore' (*), 'oneOrMore' (+), 'zeroOrOne' (?)"
         },
         "tokens": {
           "type": "array",
@@ -60,29 +79,43 @@
       },
       "required": [
         "mode",
-        "elements"
-      ]
+        "tokens"
+      ],
+      "additionalProperties": false
     },
     "orNode": {
       "type": "object",
+      "description": "Tries alternative pattern nodes until one succeeds, similar to alternation '|' in regex",
       "properties": {
-        "elements": {
+        "comment": {
+          "type": "string"
+        },
+        "bind": {
+          "type": "string"
+        },
+        "tokens": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/patternNode"
-          },
-          "minItems": 1
+          }
         }
       },
       "required": [
         "tokens"
-      ]
+      ],
+      "additionalProperties": false
     },
     "lineNode": {
       "type": "object",
+      "description": "Matches a line against a regular expression pattern",
       "properties": {
-        "regex": {
+        "comment": {
           "type": "string"
+        },
+        "regex": {
+          "type": "string",
+          "pattern": ".+",
+          "description": "Regular expression pattern (cannot be empty)"
         },
         "bind": {
           "oneOf": [
@@ -125,11 +158,20 @@
       },
       "required": [
         "regex"
-      ]
+      ],
+      "additionalProperties": false
     },
     "anylineNode": {
       "type": "object",
-      "properties": {},
+      "description": "Matches any single line, similar to '.' in regex but for entire lines",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "bind": {
+          "type": "string"
+        }
+      },
       "additionalProperties": false
     },
     "patternNode": {
