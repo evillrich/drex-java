@@ -39,8 +39,6 @@ classDiagram
 
     class LineElement {
         <<abstract>>
-        -string bind
-        +getBind() string
         +accept(visitor)
     }
 
@@ -53,6 +51,8 @@ classDiagram
     }
 
     class Anyline {
+        -string bind
+        +getBind() string
         +accept(visitor)
     }
 
