@@ -54,7 +54,7 @@
     },
     "repeatNode": {
       "type": "object",
-      "description": "Repeats pattern nodes with specified repetition mode, similar to quantifiers '*', '+', '?' in regex",
+      "description": "Repeats pattern nodes with specified repetition mode, similar to quantifiers '*', '+', '?' in regex. Always produces an array output (empty array if no matches).",
       "properties": {
         "comment": {
           "type": "string"
@@ -130,8 +130,9 @@
                   "path": {
                     "type": "string"
                   },
-                  "convert": {
-                    "type": "string"
+                  "format": {
+                    "type": "string",
+                    "description": "Formatter name (with optional parameters) to normalize captured values to a consistent string. If formatting fails, the raw captured string is returned."
                   }
                 },
                 "required": [
@@ -145,8 +146,9 @@
                 "path": {
                   "type": "string"
                 },
-                "convert": {
-                  "type": "string"
+                "format": {
+                  "type": "string",
+                  "description": "Formatter name (with optional parameters) to normalize captured values to a consistent string. If formatting fails, the raw captured string is returned."
                 }
               },
               "required": [
