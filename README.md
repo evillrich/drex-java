@@ -113,5 +113,10 @@ Produces structured output:
 }
 ```
 
-For more details, see the [docs](docs/usage.md).
+## Documentation
+
+- **[Usage Guide](docs/usage.md)** - Pattern structure and API overview
+- **[Examples](docs/examples.md)** - Common pattern examples  
+- **[Binding & Formatting](docs/binding.md)** - How data extraction and formatting works
+- **[Matching Algorithm](docs/matching.md)** - Understanding Drex's greedy, non-backtracking approach
 

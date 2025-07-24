@@ -1,0 +1,71 @@
+classDiagram
+    class NFA {
+        -State initialState
+        -State finalState
+    }
+
+    class State {
+        -int number
+        -List~Transition~ transitionsOut
+    }
+
+    class Transition {
+        -OperationType operation
+        -EditType editOperation
+        -State fromState
+        -State toState
+        -CompositePatternElement captureContext
+        -LineElement inputLine
+    }
+
+    class NFASimulator {
+        <<interface>>
+    }
+
+    class GreedyOnePassSimulator {
+        -NFA nfa
+    }
+
+    class OperationType {
+        <<enumeration>>
+        MatchLine
+        OrSplit
+        OrJoin
+        RepeatZero
+        RepeatOne
+        RepeatMore
+        RepeatAnyLineMore
+        RepeatEnd
+        StartGroup
+        EndGroup
+        StartContinuation
+        EndContinuation
+    }
+
+    class CompositePatternElement {
+        <<abstract>>
+    }
+
+    class LineElement {
+        <<abstract>>
+    }
+
+    class EditType {
+        <<enumeration>>
+        None
+        Substitution
+        Deletion
+        Insertion
+    }
+
+    NFA --> State : initialState
+    NFA --> State : finalState
+    State --> Transition : transitionsOut
+    Transition --> State : fromState
+    Transition --> State : toState
+    Transition --> OperationType
+    Transition --> EditType
+    Transition --> CompositePatternElement : captureContext
+    Transition --> LineElement : inputLine
+    NFASimulator <|-- GreedyOnePassSimulator
+    GreedyOnePassSimulator --> NFA

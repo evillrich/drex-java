@@ -11,21 +11,23 @@ classDiagram
         +getElements() PatternElement[]
     }
 
+    class GroupingPatternElement {
+        <<abstract>>
+        -string bindObject
+        +getBindObject() string
+    }
+
     class DrexPattern {
         -string version
         -string name
         -integer editDistance
-        -string bindObject
         +getVersion() string
         +getName() string
         +getEditDistance() integer
-        +getBindObject() string
         +accept(visitor)
     }
 
     class Group {
-        -string bindObject
-        +getBindObject() string
         +accept(visitor)
     }
 
@@ -38,8 +40,6 @@ classDiagram
     }
 
     class Or {
-        -string bindObject
-        +getBindObject() string
         +accept(visitor)
     }
 
@@ -80,8 +80,10 @@ classDiagram
     PatternElement <|-- CompositePatternElement : extends
     PatternElement <|-- LineElement : extends
 
-    CompositePatternElement <|-- DrexPattern : extends
-    CompositePatternElement <|-- Group : extends
+    CompositePatternElement <|-- GroupingPatternElement : extends
+    GroupingPatternElement <|-- DrexPattern : extends
+    GroupingPatternElement <|-- Group : extends
+
     CompositePatternElement <|-- Repeat : extends
     CompositePatternElement <|-- Or : extends
 

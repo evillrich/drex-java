@@ -60,7 +60,6 @@
       "description": "Tries alternative pattern elements until one succeeds, similar to alternation '|' in regex",
       "properties": {
         "comment": { "type": "string" },
-        "bindObject": { "type": "string" },
         "elements": {
           "type": "array",
           "items": { "$ref": "#/$defs/patternElement" }

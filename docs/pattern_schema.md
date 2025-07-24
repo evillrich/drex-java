@@ -7,9 +7,9 @@ A Drex pattern must be a JSON object with:
 - An `elements` array holding the actual matching elements.
 
 Element binding properties:
-- `group` and `or` elements support optional `bindObject` field for data extraction
+- `group` elements support optional `bindObject` field for data extraction
 - `repeat` elements support optional `bindArray` field for data extraction (produces arrays)
-- `line` and `anyline` elements support optional `bind` field for data extraction
+- `line` and `anyline` elements support optional `bindProperties` field for data extraction
 - All elements support optional `comment` field for documentation
 
 Composite elements (`group`, `repeat`, `or`) also contain `elements` arrays for their children.
@@ -24,12 +24,12 @@ See `pattern-schema.json` for the full machine-readable schema.
   "comment": "Pattern to extract invoice information",
   "bindObject": "document",
   "elements": [
-    { "line": { "regex": "Header (.*)", "bind": "header", "comment": "Match header line" } },
+    { "line": { "regex": "Header (.*)", "bindProperties": [{"property": "header"}], "comment": "Match header line" } },
     { "group": {
         "bindObject": "invoice",
         "comment": "Group invoice details",
         "elements": [
-          { "line": { "regex": "Invoice #(\\d+)", "bind": "id" } }
+          { "line": { "regex": "Invoice #(\\d+)", "bindProperties": [{"property": "id"}] } }
         ]
     }}
   ]

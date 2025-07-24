@@ -13,7 +13,7 @@ Drex processes documents line by line (like a line-oriented regex) and outputs:
 ### 1. Context Creation vs Value Assignment
 We distinguish between **creating JSON structure** and **assigning values to properties**:
 
-- **`bindObject`**: Creates a new JSON object context (used by `pattern`, `group`, `or`)
+- **`bindObject`**: Creates a new JSON object context (used by `pattern`, `group`)
 - **`bindArray`**: Creates a new JSON array context (used by `repeat`)
 - **`bindProperties`**: Assigns values to properties (used by `line`, `anyline`)
 
@@ -47,10 +47,10 @@ We distinguish between **creating JSON structure** and **assigning values to pro
 // Each iteration creates a new object appended to the array
 ```
 
-**Or (Object - First Match)**:
+**Or (First Match)**:
 ```json
-{"or": {"bindObject": "address"}}
-// Creates object at: currentContext.address = {}
+{"or": {"elements": [...]}}
+// No binding - matches first successful alternative and continues in current context
 ```
 
 ### 5. Line Element Binding
