@@ -7,9 +7,7 @@ classDiagram
 
     class CompositePatternElement {
         <<abstract>>
-        -string bind
         -PatternElement[] elements
-        +getBind() string
         +getElements() PatternElement[]
     }
 
@@ -17,23 +15,31 @@ classDiagram
         -string version
         -string name
         -integer editDistance
+        -string bindObject
         +getVersion() string
         +getName() string
         +getEditDistance() integer
+        +getBindObject() string
         +accept(visitor)
     }
 
     class Group {
+        -string bindObject
+        +getBindObject() string
         +accept(visitor)
     }
 
     class Repeat {
         -RepeatMode mode
+        -string bindArray
         +getMode() RepeatMode
+        +getBindArray() string
         +accept(visitor)
     }
 
     class Or {
+        -string bindObject
+        +getBindObject() string
         +accept(visitor)
     }
 
@@ -44,15 +50,15 @@ classDiagram
 
     class Line {
         -string regex
-        -BindConfig bind
+        -PropertyBinding[] bindProperties
         +getRegex() string
-        +getBind() BindConfig
+        +getBindProperties() PropertyBinding[]
         +accept(visitor)
     }
 
     class Anyline {
-        -string bind
-        +getBind() string
+        -PropertyBinding[] bindProperties
+        +getBindProperties() PropertyBinding[]
         +accept(visitor)
     }
 
@@ -63,10 +69,10 @@ classDiagram
         zeroOrOne
     }
 
-    class BindConfig {
-        -string path
+    class PropertyBinding {
+        -string property
         -string format
-        +getPath() string
+        +getProperty() string
         +getFormat() string
     }
 
@@ -85,7 +91,8 @@ classDiagram
     CompositePatternElement "1" *-- "many" PatternElement : contains
 
     Repeat --> RepeatMode : uses
-    Line "1" *-- "0..many" BindConfig : bind
+    Line "1" *-- "0..many" PropertyBinding : bindProperties
+    Anyline "1" *-- "0..many" PropertyBinding : bindProperties
 
 %% Self-referencing for recursive structure
     PatternElement ..> PatternElement : references

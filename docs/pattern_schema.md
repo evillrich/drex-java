@@ -2,13 +2,15 @@
 
 A Drex pattern must be a JSON object with:
 - Optional `version`, `name`, and `comment` metadata fields.
-- Optional `bind` at the pattern level to bind the entire matched document.
+- Optional `bindObject` at the pattern level to bind the entire matched document.
 - Optional `editDistance` for fuzzy matching (default is 0 for exact matching).
 - An `elements` array holding the actual matching elements.
 
-All elements (`group`, `repeat`, `or`, `line`, `anyline`) support:
-- Optional `comment` field for documentation
-- Optional `bind` field for data extraction
+Element binding properties:
+- `group` and `or` elements support optional `bindObject` field for data extraction
+- `repeat` elements support optional `bindArray` field for data extraction (produces arrays)
+- `line` and `anyline` elements support optional `bind` field for data extraction
+- All elements support optional `comment` field for documentation
 
 Composite elements (`group`, `repeat`, `or`) also contain `elements` arrays for their children.
 
@@ -20,11 +22,11 @@ See `pattern-schema.json` for the full machine-readable schema.
   "version": "1.0",
   "name": "InvoicePattern",
   "comment": "Pattern to extract invoice information",
-  "bind": "document",
+  "bindObject": "document",
   "elements": [
     { "line": { "regex": "Header (.*)", "bind": "header", "comment": "Match header line" } },
     { "group": {
-        "bind": "invoice",
+        "bindObject": "invoice",
         "comment": "Group invoice details",
         "elements": [
           { "line": { "regex": "Invoice #(\\d+)", "bind": "id" } }

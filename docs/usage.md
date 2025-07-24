@@ -13,20 +13,43 @@ Composite nodes (`group`, `repeat`, `or`) also have `elements` for their childre
   "version": "1.0",
   "name": "InvoicePattern",
   "elements": [
-    { "line": { "regex": "Header (.*)", "bind": "header" } },
-    { "group": {
-        "bind": "invoice",
+    { 
+      "line": { 
+        "regex": "Header (.*)", 
+        "bindProperties": [{"property": "header"}] 
+      } 
+    },
+    { 
+      "group": {
+        "bindObject": "invoice",
         "elements": [
-          { "line": { "regex": "Invoice #(\\d+)", "bind": "id" } },
-          { "repeat": {
-              "bind": "items[]",
+          { 
+            "line": { 
+              "regex": "Invoice #(\\d+)", 
+              "bindProperties": [{"property": "id"}] 
+            } 
+          },
+          { 
+            "repeat": {
+              "bindArray": "items",
               "mode": "oneOrMore",
               "elements": [
-                { "line": { "regex": "(\\S+)\\s+(\\d+)\\s+([\\d\\.]+)", "bind": ["name","qty","price"] } }
+                { 
+                  "line": { 
+                    "regex": "(\\S+)\\s+(\\d+)\\s+([\\d\\.]+)", 
+                    "bindProperties": [
+                      {"property": "name"},
+                      {"property": "qty"},
+                      {"property": "price"}
+                    ] 
+                  } 
+                }
               ]
-          }}
+            }
+          }
         ]
-    }}
+      }
+    }
   ]
 }
 ```

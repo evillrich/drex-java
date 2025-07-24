@@ -56,26 +56,45 @@ And a Drex pattern (JSON):
 {
   "version": "1.0",
   "name": "InvoicePattern",
+  "bindObject": "invoice",
   "elements": [
-    { "group": {
-        "bind": "invoice",
+    { 
+      "line": { 
+        "regex": "Invoice #(\\d+)", 
+        "bindProperties": [{"property": "id"}] 
+      } 
+    },
+    { 
+      "repeat": {
+        "bindArray": "items",
+        "mode": "oneOrMore",
         "elements": [
-          { "line": { "regex": "Invoice #(\\d+)", "bind": "id" } },
-          { "repeat": {
-              "bind": "items[]",
-              "mode": "oneOrMore",
-              "elements": [
-                { "line": { "regex": "(\\S+)\\s+(\\d+)\\s+([\\d\\.]+)", "bind": ["name","qty","price"] } }
-              ]
-          }},
-          { "or": {
-              "elements": [
-                { "line": { "regex": "Total: ([\\d\\.]+)", "bind": "total" } },
-                { "anyline": {} }
-              ]
-          }}
+          { 
+            "line": { 
+              "regex": "(\\S+)\\s+(\\d+)\\s+([\\d\\.]+)", 
+              "bindProperties": [
+                {"property": "name"},
+                {"property": "qty"},
+                {"property": "price"}
+              ] 
+            } 
+          }
         ]
-    }}
+      }
+    },
+    { 
+      "or": {
+        "elements": [
+          { 
+            "line": { 
+              "regex": "Total: ([\\d\\.]+)", 
+              "bindProperties": [{"property": "total"}] 
+            } 
+          },
+          { "anyline": {} }
+        ]
+      }
+    }
   ]
 }
 ```

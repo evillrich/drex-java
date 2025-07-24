@@ -1,0 +1,69 @@
+classDiagram
+    class PositionMetadata {
+        -Map~string, PositionInfo~ positions
+        +getPosition(path) PositionInfo
+        +addPosition(path, info) void
+        +getAllPositions() Map~string, PositionInfo~
+        +hasPosition(path) boolean
+    }
+
+    class PositionInfo {
+        -string originalText
+        -string formattedText
+        -TextBounds textBounds
+        -SpatialBounds spatialBounds
+        -CharacterBounds[] characterBounds
+        +getOriginalText() string
+        +getFormattedText() string
+        +getTextBounds() TextBounds
+        +getSpatialBounds() SpatialBounds
+        +getCharacterBounds() CharacterBounds[]
+        +hasTextBounds() boolean
+        +hasSpatialBounds() boolean
+    }
+
+    class TextBounds {
+        -int line
+        -int start
+        -int end
+        +getLine() int
+        +getStart() int
+        +getEnd() int
+        +contains(other) boolean
+        +overlaps(other) boolean
+    }
+
+    class SpatialBounds {
+        -double x
+        -double y
+        -double width
+        -double height
+        +getX() double
+        +getY() double
+        +getWidth() double
+        +getHeight() double
+        +contains(other) boolean
+        +overlaps(other) boolean
+    }
+
+    class CharacterBounds {
+        -string char
+        -double x
+        -double y
+        -double width
+        -double height
+        -double confidence
+        +getChar() string
+        +getX() double
+        +getY() double
+        +getWidth() double
+        +getHeight() double
+        +getConfidence() double
+        +isLowConfidence() boolean
+    }
+
+%% Relationships
+    PositionMetadata "1" *-- "many" PositionInfo : contains
+    PositionInfo "0..1" *-- "0..1" TextBounds : textBounds
+    PositionInfo "0..1" *-- "0..1" SpatialBounds : spatialBounds
+    PositionInfo "1" *-- "0..many" CharacterBounds : characterBounds

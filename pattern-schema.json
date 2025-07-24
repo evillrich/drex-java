@@ -16,7 +16,7 @@
       "type": "array",
       "items": { "$ref": "#/$defs/patternElement" }
     },
-    "bind": {
+    "bindObject": {
       "type": "string",
       "description": "Optional object to bind to. If present, the entire matched document binds under this key. Behaves like a group bind at the top level."
     }
@@ -28,7 +28,7 @@
       "description": "Groups pattern elements for sequential matching, similar to parentheses '()' in regex",
       "properties": {
         "comment": { "type": "string" },
-        "bind": { "type": "string" },
+        "bindObject": { "type": "string" },
         "elements": {
           "type": "array",
           "items": { "$ref": "#/$defs/patternElement" }
@@ -42,7 +42,7 @@
       "description": "Repeats pattern elements with specified repetition mode, similar to quantifiers '*', '+', '?' in regex. Always produces an array output (empty array if no matches).",
       "properties": {
         "comment": { "type": "string" },
-        "bind": { "type": "string" },
+        "bindArray": { "type": "string" },
         "mode": {
           "enum": ["zeroOrMore", "oneOrMore", "zeroOrOne"],
           "description": "Repetition mode: 'zeroOrMore' (*), 'oneOrMore' (+), 'zeroOrOne' (?)"
@@ -60,13 +60,29 @@
       "description": "Tries alternative pattern elements until one succeeds, similar to alternation '|' in regex",
       "properties": {
         "comment": { "type": "string" },
-        "bind": { "type": "string" },
+        "bindObject": { "type": "string" },
         "elements": {
           "type": "array",
           "items": { "$ref": "#/$defs/patternElement" }
         }
       },
       "required": ["elements"],
+      "additionalProperties": false
+    },
+    "propertyBinding": {
+      "type": "object",
+      "description": "Defines how to bind a regex capture group to a JSON property",
+      "properties": {
+        "property": {
+          "type": "string",
+          "description": "The JSON property name to bind to (supports both relative and absolute paths like '$.invoice.total')"
+        },
+        "format": {
+          "type": "string",
+          "description": "Optional formatter function to normalize captured values using function call syntax"
+        }
+      },
+      "required": ["property"],
       "additionalProperties": false
     },
     "line": {
@@ -79,35 +95,10 @@
           "pattern": ".+",
           "description": "Regular expression pattern (cannot be empty)"
         },
-        "bind": {
-          "oneOf": [
-            { "type": "string" },
-            {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "path": { "type": "string" },
-                  "format": {
-                    "type": "string",
-                    "description": "Formatter name (with optional parameters) to normalize captured values. If formatting fails, the raw captured string is returned."
-                  }
-                },
-                "required": ["path"]
-              }
-            },
-            {
-              "type": "object",
-              "properties": {
-                "path": { "type": "string" },
-                "format": {
-                  "type": "string",
-                  "description": "Formatter name (with optional parameters) to normalize captured values. If formatting fails, the raw captured string is returned."
-                }
-              },
-              "required": ["path"]
-            }
-          ]
+        "bindProperties": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/propertyBinding" },
+          "description": "Optional array of property bindings, mapped to regex capture groups by index (first binding maps to capture group 1, etc.)"
         }
       },
       "required": ["regex"],
@@ -115,10 +106,14 @@
     },
     "anyline": {
       "type": "object",
-      "description": "Matches any single line, similar to '.' in regex but for entire lines",
+      "description": "Matches any single line, similar to '.' in regex but for entire lines. Typically used to consume lines without extracting data.",
       "properties": {
         "comment": { "type": "string" },
-        "bind": { "type": "string" }
+        "bindProperties": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/propertyBinding" },
+          "description": "Optional array of property bindings. Rarely used since anyline typically consumes unwanted lines."
+        }
       },
       "additionalProperties": false
     },

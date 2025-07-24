@@ -18,29 +18,49 @@ Total: 6.99
   "version": "1.0",
   "name": "InvoicePattern",
   "comment": "Simple invoice extraction pattern",
+  "bindObject": "invoice",
   "elements": [
-    { "group": {
-        "bind": "invoice",
-        "comment": "Group all invoice data",
+    { 
+      "line": { 
+        "regex": "Invoice #(\\d+)", 
+        "bindProperties": [{"property": "id"}], 
+        "comment": "Extract invoice number" 
+      } 
+    },
+    { 
+      "repeat": {
+        "bindArray": "items",
+        "mode": "oneOrMore",
+        "comment": "Extract line items",
         "elements": [
-          { "line": { "regex": "Invoice #(\\d+)", "bind": "id", "comment": "Extract invoice number" } },
-          { "repeat": {
-              "bind": "items[]",
-              "mode": "oneOrMore",
-              "comment": "Extract line items",
-              "elements": [
-                { "line": { "regex": "(\\S+)\\s+(\\d+)\\s+([\\d\\.]+)", "bind": ["name","qty","price"], "comment": "Item name, quantity, price" } }
-              ]
-          }},
-          { "or": {
-              "comment": "Match total or skip line",
-              "elements": [
-                { "line": { "regex": "Total: ([\\d\\.]+)", "bind": "total" } },
-                { "anyline": {} }
-              ]
-          }}
+          { 
+            "line": { 
+              "regex": "(\\S+)\\s+(\\d+)\\s+([\\d\\.]+)", 
+              "bindProperties": [
+                {"property": "name"},
+                {"property": "qty"},
+                {"property": "price"}
+              ], 
+              "comment": "Item name, quantity, price" 
+            } 
+          }
         ]
-    }}
+      }
+    },
+    { 
+      "or": {
+        "comment": "Match total or skip line",
+        "elements": [
+          { 
+            "line": { 
+              "regex": "Total: ([\\d\\.]+)", 
+              "bindProperties": [{"property": "total"}] 
+            } 
+          },
+          { "anyline": {} }
+        ]
+      }
+    }
   ]
 }
 ```
@@ -82,29 +102,70 @@ Total: 1107.53
   "version": "1.0",
   "name": "TableInvoicePattern",
   "comment": "Invoice pattern for tabular format",
+  "bindObject": "invoice",
   "elements": [
-    { "group": {
-        "bind": "invoice",
-        "comment": "Main invoice container",
+    { 
+      "line": { 
+        "regex": "Invoice #(\\d+)", 
+        "bindProperties": [{"property": "id"}], 
+        "comment": "Invoice ID" 
+      } 
+    },
+    { 
+      "line": { 
+        "regex": "Date: (\\d{4}-\\d{2}-\\d{2})", 
+        "bindProperties": [{"property": "date"}], 
+        "comment": "Invoice date in YYYY-MM-DD format" 
+      } 
+    },
+    { "anyline": { "comment": "Skip blank line" } },
+    { 
+      "line": { 
+        "regex": "Item\\tQuantity\\tUnit Price\\tTotal", 
+        "comment": "Table header" 
+      } 
+    },
+    { 
+      "repeat": {
+        "bindArray": "items",
+        "mode": "oneOrMore",
+        "comment": "Extract table rows",
         "elements": [
-          { "line": { "regex": "Invoice #(\\d+)", "bind": "id", "comment": "Invoice ID" } },
-          { "line": { "regex": "Date: (\\d{4}-\\d{2}-\\d{2})", "bind": "date", "comment": "Invoice date in YYYY-MM-DD format" } },
-          { "anyline": { "comment": "Skip blank line" } },
-          { "line": { "regex": "Item\\tQuantity\\tUnit Price\\tTotal", "comment": "Table header" } },
-          { "repeat": {
-              "bind": "items[]",
-              "mode": "oneOrMore",
-              "comment": "Extract table rows",
-              "elements": [
-                { "line": { "regex": "([^\\t]+)\\t(\\d+)\\t([\\d\\.]+)\\t([\\d\\.]+)", "bind": ["item","quantity","unitPrice","total"], "comment": "Tab-separated item details" } }
-              ]
-          }},
-          { "anyline": { "comment": "Skip blank line before totals" } },
-          { "line": { "regex": "Subtotal: ([\\d\\.]+)", "bind": "subtotal" } },
-          { "line": { "regex": "Tax: ([\\d\\.]+)", "bind": "tax" } },
-          { "line": { "regex": "Total: ([\\d\\.]+)", "bind": "total", "comment": "Final total amount" } }
+          { 
+            "line": { 
+              "regex": "([^\\t]+)\\t(\\d+)\\t([\\d\\.]+)\\t([\\d\\.]+)", 
+              "bindProperties": [
+                {"property": "item"},
+                {"property": "quantity"},
+                {"property": "unitPrice"},
+                {"property": "total"}
+              ], 
+              "comment": "Tab-separated item details" 
+            } 
+          }
         ]
-    }}
+      }
+    },
+    { "anyline": { "comment": "Skip blank line before totals" } },
+    { 
+      "line": { 
+        "regex": "Subtotal: ([\\d\\.]+)", 
+        "bindProperties": [{"property": "subtotal"}] 
+      } 
+    },
+    { 
+      "line": { 
+        "regex": "Tax: ([\\d\\.]+)", 
+        "bindProperties": [{"property": "tax"}] 
+      } 
+    },
+    { 
+      "line": { 
+        "regex": "Total: ([\\d\\.]+)", 
+        "bindProperties": [{"property": "total"}], 
+        "comment": "Final total amount" 
+      } 
+    }
   ]
 }
 ```

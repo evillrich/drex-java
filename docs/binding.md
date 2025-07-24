@@ -2,165 +2,281 @@
 
 This document explains how **Drex patterns** bind extracted values to JSON structures and normalize captured values using **formatters**.
 
-Drex processes documents line by line (like a line-oriented regex) and outputs a structured JSON object that can be consumed directly or validated/deserialized into typed objects.
+Drex processes documents line by line (like a line-oriented regex) and outputs:
+1. **Structured JSON** with all string values (no type conversion)
+2. **Optional position metadata** in a separate file for debugging/UI workflows
 
 ---
 
-## **Binding Rules**
+## **Updated Binding Model**
 
-### 1. Scopes and Objects
-- Any composite node (`pattern`, `group`, `repeat`, `or`) with a `bind` **creates a new JSON object scope**.
-- If `bind` is missing, child nodes bind **directly into the parent scope** (bubble up).
-- This keeps the **pattern hierarchy** and **output hierarchy** decoupled — you only get a new object when you explicitly ask for one.
+### 1. Context Creation vs Value Assignment
+We distinguish between **creating JSON structure** and **assigning values**:
 
-### 2. Repeats Always Produce Arrays
-- A `repeat` node must bind to a field with a `[]` suffix (e.g., `"items[]"`).
-- Each iteration:
-    - Creates a **new child object** (even for a single scalar field),
-    - Pushes that object into the array.
-- Arrays are **always present**:
-    - `[]` when there are zero matches,
-    - `[ { ... } ]` when one match,
-    - `[ { ... }, { ... } ]` for multiple matches.
+- **`bindObject`**: Creates a new JSON object context (used by `pattern`, `group`, `or`)
+- **`bindArray`**: Creates a new JSON array context (used by `repeat` only)
+- **`bindProperties`**: Assigns values to the current context (used by `line`, `anyline`)
 
-### 3. Lines Bind into Current Scope
-- `line` and `anyline` nodes never create new objects; they **populate properties on the current scope**.
-- The `bind` value can be:
-    - **String** – maps the entire match (or first capture group) to a field.
-    - **Array** – maps multiple capture groups by index to named fields.
-    - **Object(s)** – each object specifies:
-        - `path`: field name in JSON,
-        - Optional `format`: a named formatter (see below).
+### 2. Path Types
+- **Absolute paths**: `$.invoice.total` (from root)
+- **Relative paths**: `total` (from current context)
 
-### 4. Or Nodes Follow Group Rules
-- If `bind` is present, the matched branch is wrapped in a new object.
-- If not, its children bind directly into the parent scope.
+### 3. Context Management Rules
+- Composite elements (`group`, `repeat`, `or`) **only push new context if they have a bind property**
+- If no bind property is present, children bind **directly into current context** (bubble up)
+- This keeps pattern hierarchy and output hierarchy decoupled
 
-### 5. Root Pattern
-- Acts like a `group`:
-    - If it has `bind`, that’s the root object.
-    - If not, the top-level JSON object is populated by its children.
+### 4. Element Binding Behavior
+
+**Pattern (Root)**:
+```json
+{"pattern": {"bindObject": "invoice"}} 
+// Creates: {"invoice": {...}}
+```
+
+**Group (Nested Object)**:
+```json
+{"group": {"bindObject": "header"}}
+// Creates object at: currentContext.header = {}
+```
+
+**Repeat (Array Creation)**:
+```json
+{"repeat": {"bindArray": "lineItems"}}
+// Creates array at: currentContext.lineItems = []
+// Each iteration creates a new object pushed to the array
+```
+
+**Or (Object - First Match)**:
+```json
+{"or": {"bindObject": "address"}}
+// Creates object at: currentContext.address = {}
+```
+
+### 5. Line Element Binding
+Lines extract multiple values from regex capture groups:
+
+```json
+{
+  "line": {
+    "regex": "Invoice #(\\d+) Date: (\\d{2}/\\d{2}/\\d{4}) Total: \\$([0-9.]+)",
+    "bindProperties": [
+      {"property": "number"},                                    // capture 1
+      {"property": "date", "format": "iso_date(MM/dd/yyyy)"},   // capture 2  
+      {"property": "total", "format": "currency()"}             // capture 3
+    ]
+  }
+}
+```
+
+**Key principles**:
+- Capture groups map to bindProperties array by index (first binding = capture 1, etc.)
+- No need to specify capture numbers explicitly
+- Single captures still use array format for consistency
+
+---
+
+## **Output Format**
+
+### Structured JSON (Primary Output)
+- **All values are strings** - no type conversion performed by Drex
+- **Normalized strings** via formatters for downstream parsing
+- **Clean, consumable structure** - nested objects/arrays as defined by patterns
+
+### Position Metadata (Optional Separate File)
+When position tracking is enabled, generates a separate file with location information:
+
+```json
+{
+  "invoice.number": {
+    "textBounds": {"line": 3, "start": 9, "end": 14},
+    "originalText": "Invoice #12345",
+    "formattedText": "12345"
+  },
+  "invoice.lineItems[0].description": {
+    "textBounds": {"line": 5, "start": 0, "end": 8},
+    "originalText": "Widget A",
+    "formattedText": "Widget A"
+  }
+}
+```
+
+**Use cases for position metadata**:
+- **Debugging** - "Why didn't this pattern match?"
+- **UI workflows** - Highlight extracted fields for human correction
+- **OCR correction** - Click on field to see source region
+- **Audit trails** - Track extraction provenance
 
 ---
 
 ## **Formatters**
 
-Formatters normalize captured values to **consistent strings** that can be:
-- Easily deserialized into typed objects when clean,
-- Or left as-is when OCR or noisy data prevents reliable normalization.
+Formatters normalize captured values to **consistent strings**. They use function call syntax with parameters:
 
-**Key principles:**
-- A formatter **never halts processing**.
-- If normalization succeeds → the normalized string is output.
-- If normalization fails → the **original captured string** is output.
+```json
+{"property": "total", "format": "currency(repair=true)"}
+{"property": "date", "format": "iso_date(MM/dd/yyyy)"}
+```
 
-### Registry and Extensibility
-- Drex uses a **formatter registry**, pre-populated with built-ins (dates, numbers, booleans, phone, text).
-- Callers can:
-    - Add new formatters,
-    - Override built-ins,
-    - Implement **repair + format** formatters for OCR-damaged inputs.
-- Formatters can accept **parameters** (e.g., date formats) via a colon-delimited syntax:
-  ```json
-  { "path": "createdAt", "format": "iso_date:MM/DD/YYYY" }
-  ```
+**Key principles**:
+- Formatters **never halt processing**
+- Success → normalized string output
+- Failure → **original captured string** output
+- All output values remain strings (no type conversion)
 
----
+### Function Call Syntax
+```json
+// Simple function
+{"property": "amount", "format": "currency()"}
 
-## **Built-In Formatters**
+// With parameters  
+{"property": "date", "format": "parseDate(MM/dd/yyyy)"}
 
-### Dates
-- `iso_date:MM/DD/YYYY` – `"07/23/2024"` → `"2024-07-23"`
-- `iso_date:DD/MM/YYYY` – `"23/07/2024"` → `"2024-07-23"`
-- `iso_date:MMM DD, YYYY` – `"Jul 23, 2024"` → `"2024-07-23"`
+// Multiple parameters
+{"property": "phone", "format": "e164(country=US, strict=false)"}
+```
 
-### Datetimes
-- `iso_datetime:MM/DD/YYYY HH:mm` – `"07/23/2024 14:30"` → `"2024-07-23T14:30:00Z"`
-- `iso_datetime:MM/DD/YYYY h:mm a` – `"07/23/2024 2:30 PM"` → `"2024-07-23T14:30:00Z"`
+### Built-In Formatters
 
-### Numbers
-- `decimal:#,##0.00` – `"1,234.56"` → `"1234.56"`
-- `decimal:(#,##0.00)` – `"(1,234.56)"` → `"-1234.56"` (accounting style)
+**Dates**:
+- `parseDate(MM/dd/yyyy)` – `"07/23/2024"` → `"2024-07-23"`
+- `parseDate(dd/MM/yyyy)` – `"23/07/2024"` → `"2024-07-23"`
+- `parseDate(MMM dd, yyyy)` – `"Jul 23, 2024"` → `"2024-07-23"`
 
-### Booleans
-- `boolean:yes/no` – `"Yes"` → `"true"`, `"No"` → `"false"`
+**Numbers**:
+- `currency()` – `" $1,234.56 "` → `"1234.56"`
+- `decimal(format=#,##0.00)` – `"1,234.56"` → `"1234.56"`
+- `accounting()` – `"(1,234.56)"` → `"-1234.56"`
 
-### Phones
-- `e164:(###) ###-####` – `"(555) 123-4567"` → `"+15551234567"`
+**Text**:
+- `trim()` – `"  hello  "` → `"hello"`
+- `upperCase()` – `"hello world"` → `"HELLO WORLD"`
+- `phone(format=e164)` – `"(555) 123-4567"` → `"+15551234567"`
 
-### Text
-- `uppercase:any` – `"hello world"` → `"HELLO WORLD"`
-- `trim:any` – `"  hello  "` → `"hello"`
-
----
-
-## **OCR Repair Formatters**
-- These attempt simple character substitutions (`O → 0`, `Z → 2`, `l → 1`, etc.) before normalizing.
-- Examples:
-    - `decimal_repair:#,##0.00` – `"1,Z34.5O"` → `"1234.50"`
-    - `iso_date_repair:MM/DD/YYYY` – `"O7/Z3/2O24"` → `"2024-07-23"`
+**OCR Repair Functions**:
+- `autocorrect(currency)` – `"$l,5OO.56"` → `"1500.56"` (fixes O→0, l→1)
+- `autocorrect(parseDate, MM/dd/yyyy)` – `"O7/Z3/2O24"` → `"2024-07-23"`
 
 ---
 
 ## **Examples**
 
-### Invoice with Repair Formatters
+### Complete Invoice Pattern
 
-Pattern:
 ```json
 {
-  "version": "1.0",
-  "name": "InvoicePattern",
-  "bind": "invoice",
-  "tokens": [
-    { "line": {
-        "regex": "Invoice #(\\w+)",
-        "bind": { "path": "id" }
-    }},
-    { "line": {
-        "regex": "Date: ([\\d/ZO]+)",
-        "bind": { "path": "createdAt", "format": "iso_date_repair:MM/DD/YYYY" }
-    }},
-    { "repeat": {
-        "bind": "items[]",
-        "tokens": [
-          { "line": {
-              "regex": "(\\S+)\\s+(\\S+)\\s+([\\dO\\.]+)",
-              "bind": [
-                { "path": "name" },
-                { "path": "qty", "format": "decimal_repair:#,##0" },
-                { "path": "price", "format": "decimal_repair:#,##0.00" }
+  "version": "1.0", 
+  "name": "invoice-extractor",
+  "bindObject": "invoice",
+  "elements": [
+    {
+      "group": {
+        "bindObject": "header", 
+        "elements": [
+          {
+            "line": {
+              "regex": "Invoice #(\\w+) Date: ([\\d/]+)",
+              "bindProperties": [
+                {"property": "number"},
+                {"property": "date", "format": "parseDate(MM/dd/yyyy)"}
               ]
-          } }
+            }
+          }
         ]
-    }},
-    { "line": {
-        "regex": "Total: ([\\dO,\\.\\(\\)]+)",
-        "bind": { "path": "total", "format": "decimal_repair:(#,##0.00)" }
-    }}
+      }
+    },
+    {
+      "repeat": {
+        "bindArray": "lineItems",
+        "mode": "oneOrMore",
+        "elements": [
+          {
+            "line": {
+              "regex": "(\\S+)\\s+(\\d+)\\s+\\$([\\d.]+)",
+              "bindProperties": [
+                {"property": "description"},
+                {"property": "quantity", "format": "trim()"},
+                {"property": "amount", "format": "currency()"}
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "line": {
+        "regex": "Total: \\$([\\d.]+)",
+        "bindProperties": [{"property": "total", "format": "currency()"}]
+      }
+    }
   ]
 }
 ```
 
-OCR’d Document:
+**Input Document**:
 ```
-Invoice #AB123
-Date: O7/Z3/2O24
-WidgetA 1O 19.OO
-Total: (1,Z34.5O)
+Invoice #AB123 Date: 07/23/2024
+Widget A 10 $19.99
+Widget B 5 $12.50
+Total: $32.49
 ```
 
-Output:
+**Output (extracted.json)**:
 ```json
 {
   "invoice": {
-    "id": "AB123",
-    "createdAt": "2024-07-23",
-    "items": [
-      { "name": "WidgetA", "qty": "10", "price": "19.00" }
+    "header": {
+      "number": "AB123",
+      "date": "2024-07-23"
+    },
+    "lineItems": [
+      {"description": "Widget A", "quantity": "10", "amount": "19.99"},
+      {"description": "Widget B", "quantity": "5", "amount": "12.50"}
     ],
-    "total": "-1234.50"
+    "total": "32.49"
   }
 }
 ```
-If any repair fails (e.g., `"1OQ"`), the **raw captured string** (`"1OQ"`) is output unchanged.
+
+**Position Metadata (extracted_positions.json)**:
+```json
+{
+  "invoice.header.number": {
+    "textBounds": {"line": 1, "start": 9, "end": 14},
+    "originalText": "AB123",
+    "formattedText": "AB123"
+  },
+  "invoice.header.date": {
+    "textBounds": {"line": 1, "start": 21, "end": 31},
+    "originalText": "07/23/2024", 
+    "formattedText": "2024-07-23"
+  },
+  "invoice.lineItems[0].description": {
+    "textBounds": {"line": 2, "start": 0, "end": 8},
+    "originalText": "Widget A",
+    "formattedText": "Widget A"
+  }
+}
+```
+
+---
+
+## **Design Rationale**
+
+### Why All String Output?
+- **OCR compatibility** - Text may contain errors that prevent type conversion
+- **Graceful degradation** - Failed formatting doesn't break extraction
+- **Downstream choice** - Users decide when it's safe to convert to typed objects
+- **Schema validation** - Can validate/convert strings after extraction
+
+### Why Separate Position Files?
+- **Clean primary output** - No metadata pollution in business data
+- **Optional complexity** - Positions only when needed (debugging, UI)
+- **Performance** - Can skip position tracking in production
+- **Different use cases** - Batch processing vs interactive correction workflows
+
+### Why Explicit bindObject/bindArray?
+- **Clear intent** - Obvious what JSON structure is created
+- **Type safety** - Only repeat creates arrays
+- **Self-documenting** - Pattern shows output structure
+- **Validation friendly** - Can enforce correct binding usage
