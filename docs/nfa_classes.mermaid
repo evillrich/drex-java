@@ -14,8 +14,8 @@ classDiagram
         -EditType editOperation
         -State fromState
         -State toState
-        -CompositePatternElement captureContext
-        -LineElement inputLine
+        -GroupingPatternElement group
+        -LineElement line
     }
 
     class NFASimulator {
@@ -42,7 +42,7 @@ classDiagram
         EndContinuation
     }
 
-    class CompositePatternElement {
+    class GroupingPatternElement {
         <<abstract>>
     }
 
@@ -65,7 +65,7 @@ classDiagram
     Transition --> State : toState
     Transition --> OperationType
     Transition --> EditType
-    Transition --> CompositePatternElement : captureContext
-    Transition --> LineElement : inputLine
+    Transition --> GroupingPatternElement : group
+    Transition --> LineElement : line
     NFASimulator <|-- GreedyOnePassSimulator
     GreedyOnePassSimulator --> NFA
