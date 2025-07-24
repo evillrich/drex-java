@@ -8,14 +8,14 @@ Drex processes documents line by line (like a line-oriented regex) and outputs:
 
 ---
 
-## **Updated Binding Model**
+## **Binding Model**
 
 ### 1. Context Creation vs Value Assignment
-We distinguish between **creating JSON structure** and **assigning values**:
+We distinguish between **creating JSON structure** and **assigning values to properties**:
 
 - **`bindObject`**: Creates a new JSON object context (used by `pattern`, `group`, `or`)
-- **`bindArray`**: Creates a new JSON array context (used by `repeat` only)
-- **`bindProperties`**: Assigns values to the current context (used by `line`, `anyline`)
+- **`bindArray`**: Creates a new JSON array context (used by `repeat`)
+- **`bindProperties`**: Assigns values to properties (used by `line`, `anyline`)
 
 ### 2. Path Types
 - **Absolute paths**: `$.invoice.total` (from root)
@@ -24,7 +24,7 @@ We distinguish between **creating JSON structure** and **assigning values**:
 ### 3. Context Management Rules
 - Composite elements (`group`, `repeat`, `or`) **only push new context if they have a bind property**
 - If no bind property is present, children bind **directly into current context** (bubble up)
-- This keeps pattern hierarchy and output hierarchy decoupled
+- This keeps the pattern hierarchy and output hierarchy decoupled
 
 ### 4. Element Binding Behavior
 
@@ -44,7 +44,7 @@ We distinguish between **creating JSON structure** and **assigning values**:
 ```json
 {"repeat": {"bindArray": "lineItems"}}
 // Creates array at: currentContext.lineItems = []
-// Each iteration creates a new object pushed to the array
+// Each iteration creates a new object appended to the array
 ```
 
 **Or (Object - First Match)**:
@@ -70,9 +70,8 @@ Lines extract multiple values from regex capture groups:
 ```
 
 **Key principles**:
-- Capture groups map to bindProperties array by index (first binding = capture 1, etc.)
+- Each property within bindProperties is positionally mapped to the corresponding regex capture group (first binding = capture 1, etc.)
 - No need to specify capture numbers explicitly
-- Single captures still use array format for consistency
 
 ---
 
@@ -104,14 +103,21 @@ When position tracking is enabled, generates a separate file with location infor
 **Use cases for position metadata**:
 - **Debugging** - "Why didn't this pattern match?"
 - **UI workflows** - Highlight extracted fields for human correction
-- **OCR correction** - Click on field to see source region
 - **Audit trails** - Track extraction provenance
 
 ---
 
 ## **Formatters**
 
-Formatters normalize captured values to **consistent strings**. They use function call syntax with parameters:
+Formatters normalize captured values to **consistent strings** so that downstream processing doesn't need to
+handle a variety of different formats (e.g. different date formats). Formatters are optional, but are useful
+in many cases.
+
+Note that formatting is different than type conversion, which you will need to handle as a post-processing step.
+This is a Drex design choice as there may be requirements to first correct text (e.g. through a human in the loop
+or an automated process) prior to performing type conversion.
+
+Formatters use function call syntax with parameters:
 
 ```json
 {"property": "total", "format": "currency(repair=true)"}
@@ -261,22 +267,16 @@ Total: $32.49
 
 ---
 
-## **Design Rationale**
+## **Design Choices**
 
 ### Why All String Output?
-- **OCR compatibility** - Text may contain errors that prevent type conversion
 - **Graceful degradation** - Failed formatting doesn't break extraction
 - **Downstream choice** - Users decide when it's safe to convert to typed objects
 - **Schema validation** - Can validate/convert strings after extraction
-
+- **OCR compatibility** - Text may contain errors that prevent type conversion
+- 
 ### Why Separate Position Files?
 - **Clean primary output** - No metadata pollution in business data
 - **Optional complexity** - Positions only when needed (debugging, UI)
-- **Performance** - Can skip position tracking in production
+- **Performance** - Can skip position tracking if not required for your use case
 - **Different use cases** - Batch processing vs interactive correction workflows
-
-### Why Explicit bindObject/bindArray?
-- **Clear intent** - Obvious what JSON structure is created
-- **Type safety** - Only repeat creates arrays
-- **Self-documenting** - Pattern shows output structure
-- **Validation friendly** - Can enforce correct binding usage
