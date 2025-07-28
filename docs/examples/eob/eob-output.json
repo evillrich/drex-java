@@ -1,0 +1,52 @@
+{
+  "eob": {
+    "patient": {
+      "name": "John A. Smith",
+      "memberId": "ABC123456789",
+      "groupNumber": "12345",
+      "serviceDate": "2024-03-15"
+    },
+    "provider": {
+      "name": "Metro Family Health",
+      "id": "1234567890",
+      "location": "In-Network"
+    },
+    "claimNumber": "CLM2024031501",
+    "services": [
+      {
+        "serviceDate": "2024-03-15",
+        "provider": "Dr. Sarah Johnson, MD",
+        "serviceCode": "99213",
+        "description": "Office Visit - Level 3",
+        "billed": "185.00",
+        "allowed": "142.50",
+        "deductible": "0.00",
+        "copay": "25.00",
+        "coinsurance": "0.00",
+        "paid": "117.50",
+        "patientResponsibility": "25.00"
+      },
+      {
+        "serviceDate": "2024-03-15",
+        "provider": "Metro Family Health Lab",
+        "serviceCode": "80053",
+        "description": "Comprehensive Metabolic Panel",
+        "billed": "95.00",
+        "allowed": "68.40",
+        "deductible": "0.00",
+        "copay": "0.00",
+        "coinsurance": "13.68",
+        "paid": "54.72",
+        "patientResponsibility": "13.68"
+      }
+    ],
+    "summary": {
+      "totalBilled": "280.00",
+      "totalAllowed": "210.90",
+      "totalPaid": "172.22",
+      "totalPatientResponsibility": "38.68",
+      "deductibleApplied": "0.00",
+      "deductibleRemaining": "500.00"
+    }
+  }
+}

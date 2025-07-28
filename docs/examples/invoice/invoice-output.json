@@ -1,0 +1,10 @@
+{
+  "invoice": {
+    "id": "12345",
+    "items": [
+      { "name": "Pen", "qty": "2", "price": "1.50" },
+      { "name": "Notebook", "qty": "1", "price": "3.99" }
+    ],
+    "total": "6.99"
+  }
+}

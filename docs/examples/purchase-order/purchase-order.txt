@@ -1,0 +1,18 @@
+PO Number: PO-2024-001234
+Date: 2024-03-15
+Vendor: Tech Supply Corp
+Ship To: Acme Corporation, 123 Business Ave, New York, NY 10001
+
+Line  Part Number    Description                 Qty    Unit Price    Total
+1     LAP-4521      Dell Laptop i7 16GB         5      $1,200.00     $6,000.00
+2     MON-2847      27" LED Monitor             10     $325.00       $3,250.00
+3     KEY-1092      Wireless Keyboard           15     $45.99        $689.85
+4     MOU-3384      Optical Mouse               15     $19.99        $299.85
+
+Subtotal: $10,239.70
+Shipping: $125.00
+Tax: $829.57
+Total: $11,194.27
+
+Terms: Net 30
+Ship Via: FedEx Ground

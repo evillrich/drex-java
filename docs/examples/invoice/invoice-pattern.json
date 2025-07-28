@@ -1,0 +1,49 @@
+{
+  "version": "1.0",
+  "name": "InvoicePattern",
+  "comment": "Simple invoice extraction pattern",
+  "bindObject": "invoice",
+  "elements": [
+    { 
+      "line": { 
+        "regex": "Invoice #(\\d+)", 
+        "bindProperties": [{"property": "id"}], 
+        "comment": "Extract invoice number" 
+      } 
+    },
+    { 
+      "repeat": {
+        "bindArray": "items",
+        "mode": "oneOrMore",
+        "comment": "Extract line items",
+        "elements": [
+          { 
+            "line": { 
+              "regex": "(\\S+)\\s+(\\d+)\\s+([\\d\\.]+)", 
+              "bindProperties": [
+                {"property": "name"},
+                {"property": "qty"},
+                {"property": "price"}
+              ], 
+              "comment": "Item name, quantity, price" 
+            } 
+          }
+        ]
+      }
+    },
+    { 
+      "or": {
+        "comment": "Match total or skip line",
+        "elements": [
+          { 
+            "line": { 
+              "regex": "Total: ([\\d\\.]+)", 
+              "bindProperties": [{"property": "total"}] 
+            } 
+          },
+          { "anyline": {} }
+        ]
+      }
+    }
+  ]
+}

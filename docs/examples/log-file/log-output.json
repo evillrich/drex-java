@@ -1,0 +1,120 @@
+{
+  "logEntries": [
+    {
+      "timestamp": "2024-03-15 09:15:23",
+      "level": "INFO",
+      "message": "Starting application server on port 8080",
+      "stackTrace": []
+    },
+    {
+      "timestamp": "2024-03-15 09:15:24",
+      "level": "INFO",
+      "message": "Database connection established: jdbc:postgresql://localhost:5432/appdb",
+      "stackTrace": []
+    },
+    {
+      "timestamp": "2024-03-15 09:15:25",
+      "level": "INFO",
+      "message": "Cache initialized with 1000 entries",
+      "stackTrace": []
+    },
+    {
+      "timestamp": "2024-03-15 09:16:12",
+      "level": "INFO",
+      "message": "User login: user123 from IP 192.168.1.100",
+      "stackTrace": []
+    },
+    {
+      "timestamp": "2024-03-15 09:16:45",
+      "level": "WARN",
+      "message": "Failed login attempt for user: admin from IP 10.0.0.50",
+      "stackTrace": [
+        {
+          "method": "com.example.auth.AuthService.authenticate",
+          "file": "AuthService.java",
+          "lineNumber": "45"
+        },
+        {
+          "method": "com.example.web.LoginController.doPost",
+          "file": "LoginController.java",
+          "lineNumber": "78"
+        }
+      ]
+    },
+    {
+      "timestamp": "2024-03-15 09:17:22",
+      "level": "INFO",
+      "message": "Order created: ORDER-2024-001 by user123, total: $145.99",
+      "stackTrace": []
+    },
+    {
+      "timestamp": "2024-03-15 09:18:03",
+      "level": "ERROR",
+      "message": "Database connection lost",
+      "stackTrace": [
+        {
+          "method": "java.sql.DriverManager.getConnection",
+          "file": "DriverManager.java",
+          "lineNumber": "632"
+        },
+        {
+          "method": "com.example.db.ConnectionPool.getConnection",
+          "file": "ConnectionPool.java",
+          "lineNumber": "89"
+        },
+        {
+          "method": "com.example.service.OrderService.saveOrder",
+          "file": "OrderService.java",
+          "lineNumber": "156"
+        }
+      ]
+    },
+    {
+      "timestamp": "2024-03-15 09:18:04",
+      "level": "INFO",
+      "message": "Attempting database reconnection",
+      "stackTrace": []
+    },
+    {
+      "timestamp": "2024-03-15 09:18:06",
+      "level": "INFO",
+      "message": "Database reconnected successfully",
+      "stackTrace": []
+    },
+    {
+      "timestamp": "2024-03-15 09:19:15",
+      "level": "INFO",
+      "message": "Payment processed: $145.99 for ORDER-2024-001, method: CREDIT_CARD",
+      "stackTrace": []
+    },
+    {
+      "timestamp": "2024-03-15 09:20:30",
+      "level": "WARN",
+      "message": "High memory usage detected: 85% of heap space used",
+      "stackTrace": []
+    },
+    {
+      "timestamp": "2024-03-15 09:21:45",
+      "level": "ERROR",
+      "message": "Failed to send email notification",
+      "stackTrace": [
+        {
+          "method": "com.example.email.EmailService.sendEmail",
+          "file": "EmailService.java",
+          "lineNumber": "123"
+        },
+        {
+          "method": "com.example.service.NotificationService.notify",
+          "file": "NotificationService.java",
+          "lineNumber": "67"
+        }
+      ]
+    },
+    {
+      "timestamp": "2024-03-15 09:22:10",
+      "level": "INFO",
+      "message": "User logout: user123 session duration: 6m 58s",
+      "stackTrace": []
+    }
+  ]
+}

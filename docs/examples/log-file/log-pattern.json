@@ -1,0 +1,66 @@
+{
+  "version": "1.0",
+  "name": "ApplicationLogPattern",
+  "comment": "Extract application log entries with different message types and stack traces",
+  "elements": [
+    {
+      "repeat": {
+        "bindArray": "logEntries",
+        "mode": "zeroOrMore",
+        "comment": "Process all log entries",
+        "elements": [
+          {
+            "or": {
+              "comment": "Handle different types of log lines",
+              "elements": [
+                {
+                  "group": {
+                    "comment": "Standard log entry with optional stack trace",
+                    "elements": [
+                      {
+                        "line": {
+                          "regex": "\\[(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})\\] (ERROR|WARN|INFO|DEBUG) (.+)",
+                          "bindProperties": [
+                            {"property": "timestamp", "format": "parseDate(yyyy-MM-dd HH:mm:ss)"},
+                            {"property": "level"},
+                            {"property": "message"}
+                          ],
+                          "comment": "Main log entry line"
+                        }
+                      },
+                      {
+                        "repeat": {
+                          "bindArray": "stackTrace",
+                          "mode": "zeroOrMore",
+                          "comment": "Capture stack trace lines if present",
+                          "elements": [
+                            {
+                              "line": {
+                                "regex": "\\s+at (.+)\\((.+?):(\\d+)\\)",
+                                "bindProperties": [
+                                  {"property": "method"},
+                                  {"property": "file"},
+                                  {"property": "lineNumber"}
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "line": {
+                    "regex": "\\s+at .+",
+                    "comment": "Skip orphaned stack trace lines"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "purchaseOrder": {
+    "poNumber": "PO-2024-001234",
+    "date": "2024-03-15",
+    "vendor": "Tech Supply Corp",
+    "shipTo": "Acme Corporation, 123 Business Ave, New York, NY 10001",
+    "lineItems": [
+      {
+        "lineNo": "1",
+        "partNumber": "LAP-4521",
+        "description": "Dell Laptop i7 16GB",
+        "quantity": "5",
+        "unitPrice": "1200.00",
+        "totalPrice": "6000.00"
+      },
+      {
+        "lineNo": "2",
+        "partNumber": "MON-2847",
+        "description": "27\" LED Monitor",
+        "quantity": "10",
+        "unitPrice": "325.00",
+        "totalPrice": "3250.00"
+      },
+      {
+        "lineNo": "3",
+        "partNumber": "KEY-1092",
+        "description": "Wireless Keyboard",
+        "quantity": "15",
+        "unitPrice": "45.99",
+        "totalPrice": "689.85"
+      },
+      {
+        "lineNo": "4",
+        "partNumber": "MOU-3384",
+        "description": "Optical Mouse",
+        "quantity": "15",
+        "unitPrice": "19.99",
+        "totalPrice": "299.85"
+      }
+    ],
+    "subtotal": "10239.70",
+    "shipping": "125.00",
+    "tax": "829.57",
+    "total": "11194.27",
+    "terms": "Net 30",
+    "shipVia": "FedEx Ground"
+  }
+}

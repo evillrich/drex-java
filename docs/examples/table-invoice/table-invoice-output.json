@@ -1,0 +1,14 @@
+{
+  "invoice": {
+    "id": "67890",
+    "date": "2024-01-15",
+    "items": [
+      { "item": "Laptop", "quantity": "1", "unitPrice": "899.99", "total": "899.99" },
+      { "item": "Mouse", "quantity": "2", "unitPrice": "25.00", "total": "50.00" },
+      { "item": "Keyboard", "quantity": "1", "unitPrice": "75.50", "total": "75.50" }
+    ],
+    "subtotal": "1025.49",
+    "tax": "82.04",
+    "total": "1107.53"
+  }
+}

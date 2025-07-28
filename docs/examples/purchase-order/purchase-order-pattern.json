@@ -1,0 +1,100 @@
+{
+  "version": "1.0",
+  "name": "PurchaseOrderPattern",
+  "comment": "Extract purchase order information including vendor, shipping, and line items",
+  "bindObject": "purchaseOrder",
+  "elements": [
+    {
+      "line": {
+        "regex": "PO Number: (\\w+-\\d+-\\d+)",
+        "bindProperties": [{"property": "poNumber"}],
+        "comment": "Purchase order number"
+      }
+    },
+    {
+      "line": {
+        "regex": "Date: (\\d{4}-\\d{2}-\\d{2})",
+        "bindProperties": [{"property": "date", "format": "parseDate(yyyy-MM-dd)"}]
+      }
+    },
+    {
+      "line": {
+        "regex": "Vendor: (.+)",
+        "bindProperties": [{"property": "vendor"}]
+      }
+    },
+    {
+      "line": {
+        "regex": "Ship To: (.+)",
+        "bindProperties": [{"property": "shipTo"}]
+      }
+    },
+    { "anyline": { "comment": "Skip blank line" } },
+    {
+      "line": {
+        "regex": "Line\\s+Part Number\\s+Description\\s+Qty\\s+Unit Price\\s+Total",
+        "comment": "Table header"
+      }
+    },
+    {
+      "repeat": {
+        "bindArray": "lineItems",
+        "mode": "oneOrMore",
+        "comment": "Extract purchase order line items",
+        "elements": [
+          {
+            "line": {
+              "regex": "(\\d+)\\s+([A-Z]+-\\d+)\\s+(.+?)\\s+(\\d+)\\s+\\$([\\d,]+\\.\\d{2})\\s+\\$([\\d,]+\\.\\d{2})",
+              "bindProperties": [
+                {"property": "lineNo"},
+                {"property": "partNumber"},
+                {"property": "description"},
+                {"property": "quantity"},
+                {"property": "unitPrice", "format": "currency()"},
+                {"property": "totalPrice", "format": "currency()"}
+              ]
+            }
+          }
+        ]
+      }
+    },
+    { "anyline": { "comment": "Skip blank line" } },
+    {
+      "line": {
+        "regex": "Subtotal: \\$([\\d,]+\\.\\d{2})",
+        "bindProperties": [{"property": "subtotal", "format": "currency()"}]
+      }
+    },
+    {
+      "line": {
+        "regex": "Shipping: \\$([\\d,]+\\.\\d{2})",
+        "bindProperties": [{"property": "shipping", "format": "currency()"}]
+      }
+    },
+    {
+      "line": {
+        "regex": "Tax: \\$([\\d,]+\\.\\d{2})",
+        "bindProperties": [{"property": "tax", "format": "currency()"}]
+      }
+    },
+    {
+      "line": {
+        "regex": "Total: \\$([\\d,]+\\.\\d{2})",
+        "bindProperties": [{"property": "total", "format": "currency()"}]
+      }
+    },
+    { "anyline": { "comment": "Skip blank line" } },
+    {
+      "line": {
+        "regex": "Terms: (.+)",
+        "bindProperties": [{"property": "terms"}]
+      }
+    },
+    {
+      "line": {
+        "regex": "Ship Via: (.+)",
+        "bindProperties": [{"property": "shipVia"}]
+      }
+    }
+  ]
+}
