@@ -4,37 +4,81 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Java implementation of Drex. The project is currently in its initial setup phase with no source code implemented yet.
+Drex is a **document regex engine** that processes documents line-by-line (not character-by-character) to extract structured JSON data from semi-structured text documents like invoices, purchase orders, and logs. This is the Java implementation using a greedy, non-backtracking matching algorithm with optional fuzzy matching via Levenshtein edit distance.
+
+## Architecture
+
+### Core Pattern Model
+The pattern system follows a Visitor pattern with these key elements:
+
+- **PatternElement** (abstract): Base class for all pattern elements
+- **CompositePatternElement**: Elements that contain other elements (`group`, `repeat`, `or`)
+- **LineElement**: Terminal elements that match actual text lines (`line`, `anyline`)
+- **GroupingPatternElement**: Elements that create JSON object contexts (`DrexPattern`, `Group`)
+
+### Pattern Types
+- **Line**: Matches regex patterns and extracts data via capture groups
+- **Anyline**: Matches any single line (typically for skipping unwanted content)
+- **Group**: Creates nested JSON objects with `bindObject`
+- **Repeat**: Handles repetitive patterns (zeroOrMore, oneOrMore, zeroOrOne) with `bindArray`
+- **Or**: Provides alternative matching paths (no binding - uses first successful match)
+
+### Binding System
+- **`bindObject`**: Creates JSON objects (used by pattern root, groups)
+- **`bindArray`**: Creates JSON arrays (used by repeat elements)  
+- **`bindProperties`**: Maps regex capture groups to JSON properties (used by line/anyline)
+- **PropertyBinding**: Defines property name and optional formatter function
+
+### Matching Algorithm
+Uses greedy, non-backtracking approach:
+- Processes documents line-by-line, top to bottom
+- For `repeat`: always tries "more" option first
+- For `or`: tries alternatives in order, takes first match
+- No backtracking once choice is made
+- Fuzzy matching (if enabled) tries exact matches first, then edit matches
 
 ## Build System
 
-**Note: Build configuration is not yet set up.** The `.gitignore` file suggests this will be a Gradle-based project. When setting up the build:
+**Gradle-based project** with Java 21:
 
-1. Create a `build.gradle` or `build.gradle.kts` file
-2. Define the Java version and dependencies
-3. Set up the standard Gradle project structure:
-   - `src/main/java/` for source code
-   - `src/test/java/` for tests
-   - `src/main/resources/` for resources
-
-## Common Commands
-
-Since the build system is not yet configured, here are the typical Gradle commands that will be used once set up:
-
+### Common Commands
 - Build: `./gradlew build`
-- Run tests: `./gradlew test`
+- Run tests: `./gradlew test`  
+- Run application: `./gradlew run`
 - Clean: `./gradlew clean`
-- Run a single test: `./gradlew test --tests "TestClassName"`
+- Run single test: `./gradlew test --tests "TestClassName"`
 
-## Development Environment
+### Dependencies
+- **SLF4J**: Logging (compile-only)
+- **Jackson**: JSON parsing and object mapping (jackson-core, jackson-databind, jackson-annotations)
+- **NetworkNT JSON Schema Validator**: Pattern schema validation
+- **JUnit 5**: Testing framework
 
-The project includes IntelliJ IDEA configuration (`.idea/` directory in `.gitignore`), suggesting IntelliJ IDEA as the primary IDE.
+## Package Structure
 
-## Project Status
+Base package: `io.github.evillrich.drex`
 
-This is a newly initialized project. Key setup tasks that need to be completed:
-1. Choose and configure build system (likely Gradle based on `.gitignore`)
-2. Create standard Java project directory structure
-3. Define package structure
-4. Set up testing framework (JUnit, TestNG, etc.)
-5. Add initial implementation classes
+## Key Documentation
+
+Pattern authoring guidance:
+- **`docs/binding.md`**: Data binding and formatter system
+- **`docs/matching.md`**: Matching algorithm behavior and pattern design principles  
+- **`docs/examples.md`**: Common pattern examples
+- **`pattern-schema.json`**: Machine-readable JSON schema for patterns
+- **`docs/pattern_classes.mermaid`**: Class diagram of pattern object model
+
+Design principles:
+- All output values are strings (no type conversion in engine)
+- Formatters normalize strings but never halt processing on failure  
+- Optional separate position metadata file for debugging/UI workflows
+- Patterns work with greedy algorithm (specific before general in `or` elements)
+
+## Development Notes
+
+The project currently has minimal implementation - mostly documentation and schema definitions. When implementing:
+
+1. Follow the Visitor pattern shown in class diagrams
+2. Implement pattern elements according to `pattern-schema.json`
+3. Use `bindProperties` array format for line elements (not simple `bind` strings)
+4. Remember `or` elements have no binding capabilities
+5. Test patterns with the greedy matching behavior in mind
