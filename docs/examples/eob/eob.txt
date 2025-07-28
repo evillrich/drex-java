@@ -1,0 +1,46 @@
+EXPLANATION OF BENEFITS
+
+Patient: John A. Smith
+Member ID: ABC123456789
+Group Number: 12345
+Date of Service: 03/15/2024
+
+Provider: Metro Family Health
+Provider ID: 1234567890
+Service Location: In-Network
+
+Claim Number: CLM2024031501
+
+Service Details:
+Service Date: 03/15/2024
+Provider: Dr. Sarah Johnson, MD
+Service Code: 99213
+Description: Office Visit - Level 3
+Billed: $185.00
+Allowed: $142.50
+Deductible: $0.00
+Copay: $25.00
+Coinsurance: $0.00
+Paid: $117.50
+Patient Responsibility: $25.00
+
+Service Date: 03/15/2024
+Provider: Metro Family Health Lab
+Service Code: 80053
+Description: Comprehensive Metabolic Panel
+Billed: $95.00
+Allowed: $68.40
+Deductible: $0.00
+Copay: $0.00
+Coinsurance: $13.68
+Paid: $54.72
+Patient Responsibility: $13.68
+
+Summary:
+Total Billed: $280.00
+Total Allowed: $210.90
+Total Paid: $172.22
+Total Patient Responsibility: $38.68
+
+Deductible Applied: $0.00
+Deductible Remaining: $500.00

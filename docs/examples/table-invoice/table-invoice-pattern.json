@@ -1,0 +1,70 @@
+{
+  "version": "1.0",
+  "name": "TableInvoicePattern",
+  "comment": "Invoice pattern for tabular format",
+  "bindObject": "invoice",
+  "elements": [
+    { 
+      "line": { 
+        "regex": "Invoice #(\\d+)", 
+        "bindProperties": [{"property": "id"}], 
+        "comment": "Invoice ID" 
+      } 
+    },
+    { 
+      "line": { 
+        "regex": "Date: (\\d{4}-\\d{2}-\\d{2})", 
+        "bindProperties": [{"property": "date"}], 
+        "comment": "Invoice date in YYYY-MM-DD format" 
+      } 
+    },
+    { "anyline": { "comment": "Skip blank line" } },
+    { 
+      "line": { 
+        "regex": "Item\\tQuantity\\tUnit Price\\tTotal", 
+        "comment": "Table header" 
+      } 
+    },
+    { 
+      "repeat": {
+        "bindArray": "items",
+        "mode": "oneOrMore",
+        "comment": "Extract table rows",
+        "elements": [
+          { 
+            "line": { 
+              "regex": "([^\\t]+)\\t(\\d+)\\t([\\d\\.]+)\\t([\\d\\.]+)", 
+              "bindProperties": [
+                {"property": "item"},
+                {"property": "quantity"},
+                {"property": "unitPrice"},
+                {"property": "total"}
+              ], 
+              "comment": "Tab-separated item details" 
+            } 
+          }
+        ]
+      }
+    },
+    { "anyline": { "comment": "Skip blank line before totals" } },
+    { 
+      "line": { 
+        "regex": "Subtotal: ([\\d\\.]+)", 
+        "bindProperties": [{"property": "subtotal"}] 
+      } 
+    },
+    { 
+      "line": { 
+        "regex": "Tax: ([\\d\\.]+)", 
+        "bindProperties": [{"property": "tax"}] 
+      } 
+    },
+    { 
+      "line": { 
+        "regex": "Total: ([\\d\\.]+)", 
+        "bindProperties": [{"property": "total"}], 
+        "comment": "Final total amount" 
+      } 
+    }
+  ]
+}

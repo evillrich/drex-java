@@ -1,0 +1,253 @@
+{
+  "version": "1.0",
+  "name": "EOBPattern",
+  "comment": "Extract Explanation of Benefits information including patient details and claims",
+  "bindObject": "eob",
+  "editDistance": 1,
+  "elements": [
+    {
+      "line": {
+        "regex": "EXPLANATION OF BENEFITS",
+        "comment": "Header validation"
+      }
+    },
+    { "anyline": { "comment": "Skip blank line" } },
+    {
+      "group": {
+        "bindObject": "patient",
+        "comment": "Patient information section",
+        "elements": [
+          {
+            "line": {
+              "regex": "Patient: (.+)",
+              "bindProperties": [{"property": "name"}]
+            }
+          },
+          {
+            "line": {
+              "regex": "Member ID: (\\w+)",
+              "bindProperties": [{"property": "memberId"}]
+            }
+          },
+          {
+            "line": {
+              "regex": "Group Number: (\\d+)",
+              "bindProperties": [{"property": "groupNumber"}]
+            }
+          },
+          {
+            "line": {
+              "regex": "Date of Service: (\\d{2}/\\d{2}/\\d{4})",
+              "bindProperties": [
+                {"property": "serviceDate", "format": "parseDate(MM/dd/yyyy)"}
+              ]
+            }
+          }
+        ]
+      }
+    },
+    { "anyline": { "comment": "Skip blank line" } },
+    {
+      "group": {
+        "bindObject": "provider",
+        "comment": "Provider information",
+        "elements": [
+          {
+            "line": {
+              "regex": "Provider: (.+)",
+              "bindProperties": [{"property": "name"}]
+            }
+          },
+          {
+            "line": {
+              "regex": "Provider ID: (\\d+)",
+              "bindProperties": [{"property": "id"}]
+            }
+          },
+          {
+            "line": {
+              "regex": "Service Location: (.+)",
+              "bindProperties": [{"property": "location"}]
+            }
+          }
+        ]
+      }
+    },
+    { "anyline": { "comment": "Skip blank line" } },
+    {
+      "line": {
+        "regex": "Claim Number: (\\w+)",
+        "bindProperties": [{"property": "claimNumber"}]
+      }
+    },
+    { "anyline": { "comment": "Skip blank line" } },
+    {
+      "line": {
+        "regex": "Service Details:",
+        "comment": "Service details header"
+      }
+    },
+    {
+      "repeat": {
+        "bindArray": "services",
+        "mode": "oneOrMore",
+        "comment": "Extract service details",
+        "elements": [
+          {
+            "group": {
+              "comment": "Single service entry",
+              "elements": [
+                {
+                  "line": {
+                    "regex": "Service Date: (\\d{2}/\\d{2}/\\d{4})",
+                    "bindProperties": [
+                      {"property": "serviceDate", "format": "parseDate(MM/dd/yyyy)"}
+                    ]
+                  }
+                },
+                {
+                  "line": {
+                    "regex": "Provider: (.+)",
+                    "bindProperties": [{"property": "provider"}]
+                  }
+                },
+                {
+                  "line": {
+                    "regex": "Service Code: (\\w+)",
+                    "bindProperties": [{"property": "serviceCode"}]
+                  }
+                },
+                {
+                  "line": {
+                    "regex": "Description: (.+)",
+                    "bindProperties": [{"property": "description"}]
+                  }
+                },
+                {
+                  "line": {
+                    "regex": "Billed: \\$([\\d\\.]+)",
+                    "bindProperties": [
+                      {"property": "billed", "format": "currency()"}
+                    ]
+                  }
+                },
+                {
+                  "line": {
+                    "regex": "Allowed: \\$([\\d\\.]+)",
+                    "bindProperties": [
+                      {"property": "allowed", "format": "currency()"}
+                    ]
+                  }
+                },
+                {
+                  "line": {
+                    "regex": "Deductible: \\$([\\d\\.]+)",
+                    "bindProperties": [
+                      {"property": "deductible", "format": "currency()"}
+                    ]
+                  }
+                },
+                {
+                  "line": {
+                    "regex": "Copay: \\$([\\d\\.]+)",
+                    "bindProperties": [
+                      {"property": "copay", "format": "currency()"}
+                    ]
+                  }
+                },
+                {
+                  "line": {
+                    "regex": "Coinsurance: \\$([\\d\\.]+)",
+                    "bindProperties": [
+                      {"property": "coinsurance", "format": "currency()"}
+                    ]
+                  }
+                },
+                {
+                  "line": {
+                    "regex": "Paid: \\$([\\d\\.]+)",
+                    "bindProperties": [
+                      {"property": "paid", "format": "currency()"}
+                    ]
+                  }
+                },
+                {
+                  "line": {
+                    "regex": "Patient Responsibility: \\$([\\d\\.]+)",
+                    "bindProperties": [
+                      {"property": "patientResponsibility", "format": "currency()"}
+                    ]
+                  }
+                },
+                { "anyline": { "comment": "Skip blank line between services" } }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "line": {
+        "regex": "Summary:",
+        "comment": "Summary section header"
+      }
+    },
+    {
+      "group": {
+        "bindObject": "summary",
+        "comment": "Summary totals",
+        "elements": [
+          {
+            "line": {
+              "regex": "Total Billed: \\$([\\d\\.]+)",
+              "bindProperties": [
+                {"property": "totalBilled", "format": "currency()"}
+              ]
+            }
+          },
+          {
+            "line": {
+              "regex": "Total Allowed: \\$([\\d\\.]+)",
+              "bindProperties": [
+                {"property": "totalAllowed", "format": "currency()"}
+              ]
+            }
+          },
+          {
+            "line": {
+              "regex": "Total Paid: \\$([\\d\\.]+)",
+              "bindProperties": [
+                {"property": "totalPaid", "format": "currency()"}
+              ]
+            }
+          },
+          {
+            "line": {
+              "regex": "Total Patient Responsibility: \\$([\\d\\.]+)",
+              "bindProperties": [
+                {"property": "totalPatientResponsibility", "format": "currency()"}
+              ]
+            }
+          },
+          { "anyline": { "comment": "Skip blank line" } },
+          {
+            "line": {
+              "regex": "Deductible Applied: \\$([\\d\\.]+)",
+              "bindProperties": [
+                {"property": "deductibleApplied", "format": "currency()"}
+              ]
+            }
+          },
+          {
+            "line": {
+              "regex": "Deductible Remaining: \\$([\\d\\.]+)",
+              "bindProperties": [
+                {"property": "deductibleRemaining", "format": "currency()"}
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

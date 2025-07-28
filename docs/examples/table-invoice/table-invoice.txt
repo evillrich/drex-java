@@ -1,0 +1,11 @@
+Invoice #67890
+Date: 2024-01-15
+
+Item	Quantity	Unit Price	Total
+Laptop	1	899.99	899.99
+Mouse	2	25.00	50.00
+Keyboard	1	75.50	75.50
+
+Subtotal: 1025.49
+Tax: 82.04
+Total: 1107.53
