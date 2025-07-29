@@ -19,7 +19,7 @@ import java.util.regex.PatternSyntaxException;
  * capture group 1 maps to the first binding, group 2 to the second binding, etc.
  * The number of capture groups should match the number of property bindings.
  * <p>
- * Instances are immutable and thread-safe.
+ * The regex pattern is compiled lazily on first use to improve performance.
  *
  * @since 1.0
  * @see LineElement
@@ -30,17 +30,16 @@ public final class Line implements LineElement {
     private final String comment;
     private final String regex;
     private final List<PropertyBinding> bindProperties;
-    private final Pattern compiledPattern;
+    private Pattern compiledPattern;
 
     /**
-     * Creates a Line with validation and regex compilation.
+     * Creates a Line with validation.
      *
      * @param comment optional descriptive comment, may be null
      * @param regex the regular expression pattern to match, never null or empty
      * @param bindProperties the property bindings for captured groups, never null but may be empty
      * @throws IllegalArgumentException if regex is null/empty, bindProperties is null, 
      *                                  or bindProperties contains null values
-     * @throws PatternCompilationException if the regex pattern is invalid
      */
     public Line(String comment, String regex, List<PropertyBinding> bindProperties) {
         if (regex == null || regex.trim().isEmpty()) {
@@ -59,13 +58,6 @@ public final class Line implements LineElement {
         this.comment = comment;
         this.regex = regex.trim();
         this.bindProperties = List.copyOf(bindProperties);
-        
-        // Compile the regex pattern during construction
-        try {
-            this.compiledPattern = Pattern.compile(this.regex);
-        } catch (PatternSyntaxException e) {
-            throw new PatternCompilationException("Invalid regex pattern '" + this.regex + "': " + e.getMessage(), e);
-        }
     }
 
     /**
@@ -76,7 +68,6 @@ public final class Line implements LineElement {
      * @param bindProperties the property bindings for captured groups, must not be null but may be empty
      * @throws IllegalArgumentException if regex is null/empty, bindProperties is null, 
      *                                  or bindProperties contains null values
-     * @throws PatternCompilationException if the regex pattern is invalid
      */
     public Line(String comment, String regex, PropertyBinding... bindProperties) {
         this(comment, regex, List.of(bindProperties));
@@ -115,6 +106,9 @@ public final class Line implements LineElement {
      * @return the compiled Pattern object, never null
      */
     public Pattern compiledPattern() {
+        if (compiledPattern == null) {
+            compile();
+        }
         return compiledPattern;
     }
 
@@ -145,18 +139,31 @@ public final class Line implements LineElement {
      * @return the number of capturing groups in the compiled pattern
      */
     public int getCaptureGroupCount() {
+        if (compiledPattern == null) {
+            compile();
+        }
         return compiledPattern.matcher("").groupCount();
     }
 
     @Override
     public void compile() {
-        // Pattern is already compiled during construction - this is a no-op
-        // but required by the interface for consistency
+        // Only compile if not already compiled
+        if (compiledPattern == null) {
+            try {
+                this.compiledPattern = Pattern.compile(this.regex);
+            } catch (PatternSyntaxException e) {
+                throw new PatternCompilationException("Invalid regex pattern '" + this.regex + "': " + e.getMessage(), e);
+            }
+        }
     }
 
     @Override
     public LineMatchResult match(String inputLine) {
         Objects.requireNonNull(inputLine, "inputLine must not be null");
+        
+        if (compiledPattern == null) {
+            compile();
+        }
         
         Matcher matcher = compiledPattern.matcher(inputLine);
         if (!matcher.find()) {
@@ -203,6 +210,9 @@ public final class Line implements LineElement {
      * @return the compiled Pattern object, never null
      */
     public Pattern getCompiledPattern() {
+        if (compiledPattern == null) {
+            compile();
+        }
         return compiledPattern;
     }
 
