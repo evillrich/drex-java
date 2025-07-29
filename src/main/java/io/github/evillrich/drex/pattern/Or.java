@@ -1,5 +1,6 @@
 package io.github.evillrich.drex.pattern;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -20,52 +21,58 @@ import java.util.Objects;
  * <p>
  * Instances are immutable and thread-safe.
  *
+ * @param comment optional descriptive comment, may be null
+ * @param elements the alternative pattern elements, never null and never empty
  * @since 1.0
  * @see CompositePatternElement
- * @see Builder
  */
-public final class Or extends CompositePatternElement {
+public record Or(
+    String comment,
+    List<PatternElement> elements
+) implements CompositePatternElement {
 
     /**
-     * Constructs a new Or with the specified alternative elements.
-     *
-     * @param comment optional descriptive comment, may be null
-     * @param elements the alternative pattern elements, must not be null and should contain at least one element
-     * @throws IllegalArgumentException if elements is null or contains null values
+     * Creates an Or record with validation and immutable list creation.
      */
-    public Or(String comment, List<PatternElement> elements) {
-        super(comment, elements);
+    public Or {
+        Objects.requireNonNull(elements, "elements must not be null");
         
         if (elements.isEmpty()) {
             throw new IllegalArgumentException("Or element must have at least one alternative");
         }
+        
+        // Validate no null elements
+        for (int i = 0; i < elements.size(); i++) {
+            if (elements.get(i) == null) {
+                throw new IllegalArgumentException("Element at index " + i + " must not be null");
+            }
+        }
+        
+        // Create immutable list
+        elements = List.copyOf(elements);
     }
 
     /**
-     * Constructs a new Or with the specified alternative elements.
+     * Creates a new Or with the specified alternative elements.
      *
      * @param comment optional descriptive comment, may be null
      * @param elements the alternative pattern elements, must not be null and should contain at least one element
      * @throws IllegalArgumentException if elements is null or contains null values
      */
     public Or(String comment, PatternElement... elements) {
-        super(comment, elements);
-        
-        if (elements.length == 0) {
-            throw new IllegalArgumentException("Or element must have at least one alternative");
-        }
+        this(comment, List.of(elements));
     }
 
     /**
      * Returns the alternative pattern elements.
      * <p>
      * Alternatives are tried in order, and the first successful match is used.
-     * The returned list is immutable.
+     * This is a convenience method equivalent to accessing the {@code elements} component directly.
      *
      * @return the list of alternative elements, never null or empty
      */
     public List<PatternElement> getAlternatives() {
-        return getElements();
+        return elements;
     }
 
     /**
@@ -74,7 +81,7 @@ public final class Or extends CompositePatternElement {
      * @return the number of alternatives, always greater than zero
      */
     public int getAlternativeCount() {
-        return getElementCount();
+        return elements.size();
     }
 
     @Override
@@ -83,39 +90,69 @@ public final class Or extends CompositePatternElement {
         return visitor.visitOr(this);
     }
 
-    @Override
-    public String toString() {
-        return "Or[" +
-               "alternatives=" + getAlternativeCount() +
-               (getComment() != null ? ", comment=" + getComment() : "") +
-               "]";
-    }
-
     /**
-     * Creates a new builder for constructing Or instances.
+     * Returns an immutable list of child pattern elements.
+     * <p>
+     * This is a convenience method equivalent to accessing the {@code elements} component directly.
      *
-     * @return a new Builder instance, never null
+     * @return an unmodifiable list of child elements, never null but may be empty
      */
-    public static Builder builder() {
-        return new Builder();
+    @Override
+    public List<PatternElement> getElements() {
+        return elements;
     }
 
     /**
-     * Builder class for constructing Or instances using a fluent API.
+     * Returns the optional comment associated with this pattern element.
+     * <p>
+     * This is a convenience method equivalent to accessing the {@code comment} component directly.
+     *
+     * @return the comment string, or null if no comment was provided
      */
-    public static final class Builder {
-        private String comment;
-        private List<PatternElement> elements;
+    @Override
+    public String getComment() {
+        return comment;
+    }
 
-        private Builder() {}
+    /**
+     * Creates a new OrBuilder for fluent construction of Or instances.
+     *
+     * @return a new OrBuilder instance, never null
+     */
+    public static OrBuilder builder() {
+        return new OrBuilder();
+    }
+
+    /**
+     * A fluent builder for constructing Or instances.
+     * <p>
+     * This builder provides a fluent interface for creating Or pattern elements
+     * with validation and type safety. The builder is mutable during construction
+     * but produces immutable Or records.
+     * <p>
+     * Example usage:
+     * <pre>{@code
+     * Or or = Or.builder()
+     *     .comment("Handle different total formats")
+     *     .elements(
+     *         Line.builder().regex("Total: \\$([\\d,]+\\.\\d{2})").bindProperties(PropertyBinding.of("total")).build(),
+     *         Line.builder().regex("Amount Due: \\$([\\d,]+\\.\\d{2})").bindProperties(PropertyBinding.of("total")).build(),
+     *         Line.builder().regex("Final Total: ([\\d,]+\\.\\d{2})").bindProperties(PropertyBinding.of("total")).build()
+     *     )
+     *     .build();
+     * }</pre>
+     */
+    public static class OrBuilder {
+        private String comment;
+        private List<PatternElement> elements = new ArrayList<>();
 
         /**
-         * Sets an optional comment describing this or element.
+         * Sets the comment for this or pattern.
          *
-         * @param comment the comment text, may be null
+         * @param comment optional descriptive comment, may be null
          * @return this builder for method chaining
          */
-        public Builder comment(String comment) {
+        public OrBuilder comment(String comment) {
             this.comment = comment;
             return this;
         }
@@ -123,41 +160,32 @@ public final class Or extends CompositePatternElement {
         /**
          * Sets the alternative pattern elements.
          *
-         * @param elements the pattern elements, must not be null and should contain at least one element
+         * @param elements the alternative pattern elements, must not be null and should contain at least one element
          * @return this builder for method chaining
-         * @throws IllegalArgumentException if elements is null
          */
-        public Builder elements(List<PatternElement> elements) {
-            Objects.requireNonNull(elements, "elements must not be null");
-            this.elements = elements;
+        public OrBuilder elements(PatternElement... elements) {
+            this.elements = List.of(elements);
             return this;
         }
 
         /**
          * Sets the alternative pattern elements.
          *
-         * @param elements the pattern elements, must not be null and should contain at least one element
+         * @param elements the alternative pattern elements, must not be null and should contain at least one element
          * @return this builder for method chaining
-         * @throws IllegalArgumentException if elements is null
          */
-        public Builder elements(PatternElement... elements) {
-            Objects.requireNonNull(elements, "elements must not be null");
-            this.elements = List.of(elements);
+        public OrBuilder elements(List<PatternElement> elements) {
+            this.elements = List.copyOf(elements);
             return this;
         }
 
         /**
-         * Constructs a new Or with the configured properties.
+         * Builds and returns a new Or instance with the configured properties.
          *
          * @return a new Or instance, never null
-         * @throws IllegalStateException if required properties are not set
-         * @throws IllegalArgumentException if elements is empty
+         * @throws IllegalArgumentException if elements is null or contains null values
          */
         public Or build() {
-            if (elements == null) {
-                throw new IllegalStateException("elements is required");
-            }
-
             return new Or(comment, elements);
         }
     }

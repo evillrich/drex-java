@@ -160,14 +160,14 @@ public class Repeat extends CompositePatternElement {
 
 public class RepeatBuilder {
     public RepeatBuilder bindArray(String bindArray);
-    public RepeatBuilder mode(RepeatMode mode);
+    public RepeatBuilder mode(Repeat.Mode mode);
     public RepeatBuilder comment(String comment);
     public RepeatBuilder elements(PatternElement... elements);
     public RepeatBuilder elements(List<PatternElement> elements);
     public Repeat build();
 }
 
-public enum RepeatMode {
+public enum Repeat.Mode {
     ZERO_OR_MORE,  // *
     ONE_OR_MORE,   // +
     ZERO_OR_ONE    // ?
@@ -178,7 +178,7 @@ public enum RepeatMode {
 ```java
 Repeat lineItems = Repeat.builder()
     .bindArray("items")
-    .mode(RepeatMode.ONE_OR_MORE)
+    .mode(Repeat.Mode.ONE_OR_MORE)
     .comment("Extract all line items")
     .elements(
         Line.builder()

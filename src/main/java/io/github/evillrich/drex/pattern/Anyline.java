@@ -1,7 +1,6 @@
 package io.github.evillrich.drex.pattern;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -27,25 +26,21 @@ import java.util.Objects;
  * <p>
  * Instances are immutable and thread-safe.
  *
+ * @param comment optional descriptive comment, may be null
+ * @param bindProperties the property bindings for the matched line, never null but may be empty
  * @since 1.0
  * @see LineElement
  * @see PropertyBinding
- * @see Builder
  */
-public final class Anyline extends LineElement {
-
-    private final List<PropertyBinding> bindProperties;
+public record Anyline(
+    String comment,
+    List<PropertyBinding> bindProperties
+) implements LineElement {
 
     /**
-     * Constructs a new Anyline with the specified property bindings.
-     *
-     * @param comment optional descriptive comment, may be null
-     * @param bindProperties the property bindings for the matched line, must not be null but may be empty
-     * @throws IllegalArgumentException if bindProperties is null or contains null values
+     * Creates an Anyline record with validation and immutable list creation.
      */
-    public Anyline(String comment, List<PropertyBinding> bindProperties) {
-        super(comment);
-        
+    public Anyline {
         Objects.requireNonNull(bindProperties, "bindProperties must not be null");
         
         // Validate no null bindings
@@ -55,22 +50,23 @@ public final class Anyline extends LineElement {
             }
         }
         
-        this.bindProperties = Collections.unmodifiableList(new ArrayList<>(bindProperties));
+        // Create immutable list
+        bindProperties = List.copyOf(bindProperties);
     }
 
     /**
-     * Constructs a new Anyline with the specified property bindings.
+     * Creates a new Anyline with the specified property bindings.
      *
      * @param comment optional descriptive comment, may be null
      * @param bindProperties the property bindings for the matched line, must not be null but may be empty
      * @throws IllegalArgumentException if bindProperties is null or contains null values
      */
     public Anyline(String comment, PropertyBinding... bindProperties) {
-        this(comment, Arrays.asList(bindProperties));
+        this(comment, List.of(bindProperties));
     }
 
     /**
-     * Constructs a new Anyline with no property bindings.
+     * Creates a new Anyline with no property bindings.
      * <p>
      * This is commonly used for skipping lines without capturing their content.
      *
@@ -78,18 +74,6 @@ public final class Anyline extends LineElement {
      */
     public Anyline(String comment) {
         this(comment, Collections.emptyList());
-    }
-
-    /**
-     * Returns the property bindings that define how the matched line maps to JSON properties.
-     * <p>
-     * The returned list is immutable and contains no null elements. When bindings
-     * are present, the entire matched line text is bound to each specified property.
-     *
-     * @return the list of property bindings, never null but may be empty
-     */
-    public List<PropertyBinding> getBindProperties() {
-        return bindProperties;
     }
 
     /**
@@ -136,96 +120,102 @@ public final class Anyline extends LineElement {
         return visitor.visitAnyline(this);
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!super.equals(obj)) {
-            return false;
-        }
-        Anyline anyline = (Anyline) obj;
-        return Objects.equals(bindProperties, anyline.bindProperties);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), bindProperties);
-    }
-
-    @Override
-    public String toString() {
-        return "Anyline[" +
-               "bindings=" + bindProperties.size() +
-               (getComment() != null ? ", comment=" + getComment() : "") +
-               "]";
-    }
-
     /**
-     * Creates a new builder for constructing Anyline instances.
+     * Returns the property bindings that define how the matched line maps to JSON properties.
+     * <p>
+     * This is a convenience method equivalent to accessing the {@code bindProperties} component directly.
      *
-     * @return a new Builder instance, never null
+     * @return the list of property bindings, never null but may be empty
      */
-    public static Builder builder() {
-        return new Builder();
+    public List<PropertyBinding> getBindProperties() {
+        return bindProperties;
     }
 
     /**
-     * Builder class for constructing Anyline instances using a fluent API.
+     * Returns the optional comment associated with this pattern element.
+     * <p>
+     * This is a convenience method equivalent to accessing the {@code comment} component directly.
+     *
+     * @return the comment string, or null if no comment was provided
      */
-    public static final class Builder {
-        private String comment;
-        private List<PropertyBinding> bindProperties;
+    @Override
+    public String getComment() {
+        return comment;
+    }
 
-        private Builder() {}
+    /**
+     * Creates a new AnylineBuilder for fluent construction of Anyline instances.
+     *
+     * @return a new AnylineBuilder instance, never null
+     */
+    public static AnylineBuilder builder() {
+        return new AnylineBuilder();
+    }
+
+    /**
+     * A fluent builder for constructing Anyline instances.
+     * <p>
+     * This builder provides a fluent interface for creating Anyline pattern elements
+     * with validation and type safety. The builder is mutable during construction
+     * but produces immutable Anyline records.
+     * <p>
+     * Example usage:
+     * <pre>{@code
+     * Anyline anyline = Anyline.builder()
+     *     .comment("Skip blank or unknown lines")
+     *     .build();
+     * 
+     * // With binding (rare case)
+     * Anyline withBinding = Anyline.builder()
+     *     .comment("Capture unknown content")
+     *     .bindProperties(PropertyBinding.of("skippedContent"))
+     *     .build();
+     * }</pre>
+     */
+    public static class AnylineBuilder {
+        private String comment;
+        private List<PropertyBinding> bindProperties = new ArrayList<>();
 
         /**
-         * Sets an optional comment describing this anyline.
+         * Sets the comment for this anyline pattern.
          *
-         * @param comment the comment text, may be null
+         * @param comment optional descriptive comment, may be null
          * @return this builder for method chaining
          */
-        public Builder comment(String comment) {
+        public AnylineBuilder comment(String comment) {
             this.comment = comment;
             return this;
         }
 
         /**
-         * Sets the property bindings.
+         * Sets the property bindings for the matched line.
          *
-         * @param bindProperties the property bindings, must not be null
+         * @param bindings the property bindings for the matched line, must not be null
          * @return this builder for method chaining
-         * @throws IllegalArgumentException if bindProperties is null
          */
-        public Builder bindProperties(List<PropertyBinding> bindProperties) {
-            Objects.requireNonNull(bindProperties, "bindProperties must not be null");
-            this.bindProperties = bindProperties;
+        public AnylineBuilder bindProperties(PropertyBinding... bindings) {
+            this.bindProperties = List.of(bindings);
             return this;
         }
 
         /**
-         * Sets the property bindings.
+         * Sets the property bindings for the matched line.
          *
-         * @param bindProperties the property bindings, must not be null
+         * @param bindings the property bindings for the matched line, must not be null
          * @return this builder for method chaining
-         * @throws IllegalArgumentException if bindProperties is null
          */
-        public Builder bindProperties(PropertyBinding... bindProperties) {
-            Objects.requireNonNull(bindProperties, "bindProperties must not be null");
-            this.bindProperties = Arrays.asList(bindProperties);
+        public AnylineBuilder bindProperties(List<PropertyBinding> bindings) {
+            this.bindProperties = List.copyOf(bindings);
             return this;
         }
 
         /**
-         * Constructs a new Anyline with the configured properties.
+         * Builds and returns a new Anyline instance with the configured properties.
          *
          * @return a new Anyline instance, never null
+         * @throws IllegalArgumentException if bindProperties contains null values
          */
         public Anyline build() {
-            if (bindProperties == null) {
-                bindProperties = Collections.emptyList();
-            }
-
             return new Anyline(comment, bindProperties);
         }
     }

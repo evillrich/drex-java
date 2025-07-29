@@ -1,6 +1,5 @@
 package io.github.evillrich.drex.pattern;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -9,45 +8,38 @@ import java.util.Objects;
  * Represents the result of matching a single line against a line pattern element.
  * <p>
  * LineMatchResult contains information about whether the match was successful,
- * the captured text groups, and any extracted property values. This class is
+ * the captured text groups, and any extracted property values. This record is
  * used by LineElement implementations to return matching results.
  * <p>
  * Instances are immutable and thread-safe.
  *
+ * @param matched true if the line was successfully matched, false otherwise
+ * @param matchedText the complete matched text, or null if the match failed
+ * @param capturedGroups the captured regex groups, never null but may be empty
  * @since 1.0
  * @see LineElement
  * @see Line
  * @see Anyline
  */
-public final class LineMatchResult {
-
-    private final boolean matched;
-    private final String matchedText;
-    private final List<String> capturedGroups;
+public record LineMatchResult(
+    boolean matched,
+    String matchedText,
+    List<String> capturedGroups
+) {
 
     /**
-     * Creates a successful match result with captured groups.
-     *
-     * @param matchedText the complete matched text, must not be null
-     * @param capturedGroups the captured regex groups, must not be null but may be empty
-     * @throws IllegalArgumentException if matchedText or capturedGroups is null
+     * Creates a LineMatchResult with validation and immutable list copying.
      */
-    private LineMatchResult(String matchedText, List<String> capturedGroups) {
-        Objects.requireNonNull(matchedText, "matchedText must not be null");
+    public LineMatchResult {
         Objects.requireNonNull(capturedGroups, "capturedGroups must not be null");
         
-        this.matched = true;
-        this.matchedText = matchedText;
-        this.capturedGroups = Collections.unmodifiableList(new ArrayList<>(capturedGroups));
-    }
-
-    /**
-     * Creates a failed match result.
-     */
-    private LineMatchResult() {
-        this.matched = false;
-        this.matchedText = null;
-        this.capturedGroups = Collections.emptyList();
+        // Validate that successful matches have non-null matchedText
+        if (matched && matchedText == null) {
+            throw new IllegalArgumentException("matchedText must not be null for successful matches");
+        }
+        
+        // Ensure immutability by copying the list
+        capturedGroups = Collections.unmodifiableList(List.copyOf(capturedGroups));
     }
 
     /**
@@ -59,7 +51,8 @@ public final class LineMatchResult {
      * @throws IllegalArgumentException if matchedText or capturedGroups is null
      */
     public static LineMatchResult success(String matchedText, List<String> capturedGroups) {
-        return new LineMatchResult(matchedText, capturedGroups);
+        Objects.requireNonNull(matchedText, "matchedText must not be null");
+        return new LineMatchResult(true, matchedText, capturedGroups);
     }
 
     /**
@@ -71,8 +64,9 @@ public final class LineMatchResult {
      * @throws IllegalArgumentException if matchedText or capturedGroups is null
      */
     public static LineMatchResult success(String matchedText, String... capturedGroups) {
+        Objects.requireNonNull(matchedText, "matchedText must not be null");
         Objects.requireNonNull(capturedGroups, "capturedGroups must not be null");
-        return new LineMatchResult(matchedText, List.of(capturedGroups));
+        return new LineMatchResult(true, matchedText, List.of(capturedGroups));
     }
 
     /**
@@ -81,40 +75,18 @@ public final class LineMatchResult {
      * @return a failed LineMatchResult, never null
      */
     public static LineMatchResult failure() {
-        return new LineMatchResult();
+        return new LineMatchResult(false, null, Collections.emptyList());
     }
 
     /**
      * Returns true if the line was successfully matched.
+     * <p>
+     * This is a convenience method equivalent to accessing the {@code matched} component directly.
      *
      * @return true if matched, false otherwise
      */
     public boolean isMatched() {
         return matched;
-    }
-
-    /**
-     * Returns the complete matched text.
-     * <p>
-     * This is only available for successful matches.
-     *
-     * @return the matched text, or null if the match failed
-     */
-    public String getMatchedText() {
-        return matchedText;
-    }
-
-    /**
-     * Returns the captured regex groups.
-     * <p>
-     * The returned list is immutable and contains the captured text for each
-     * regex group. For successful matches, this list may be empty if the pattern
-     * has no capture groups. For failed matches, this list is always empty.
-     *
-     * @return the list of captured groups, never null but may be empty
-     */
-    public List<String> getCapturedGroups() {
-        return capturedGroups;
     }
 
     /**
@@ -141,25 +113,12 @@ public final class LineMatchResult {
         return capturedGroups.get(groupIndex);
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-        LineMatchResult that = (LineMatchResult) obj;
-        return matched == that.matched &&
-               Objects.equals(matchedText, that.matchedText) &&
-               Objects.equals(capturedGroups, that.capturedGroups);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(matched, matchedText, capturedGroups);
-    }
-
+    /**
+     * Returns a string representation of this LineMatchResult.
+     * <p>
+     * For failed matches, returns a simple representation. For successful matches,
+     * includes the matched text and capture count.
+     */
     @Override
     public String toString() {
         if (!matched) {

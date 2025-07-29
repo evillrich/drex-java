@@ -1,100 +1,154 @@
 classDiagram
     class PatternElement {
-        <<abstract>>
-        -string comment
+        <<interface>>
         +getComment() string
+        +compile() void
+        +accept(visitor) T
     }
 
     class CompositePatternElement {
-        <<abstract>>
-        -PatternElement[] elements
-        +getElements() PatternElement[]
+        <<interface>>
+        +getElements() List~PatternElement~
+        +getElementCount() int
+        +isEmpty() boolean
+        +compile() void
     }
 
     class GroupingPatternElement {
-        <<abstract>>
-        -string bindObject
+        <<interface>>
         +getBindObject() string
     }
 
+    class LineElement {
+        <<interface>>
+        +match(inputLine) LineMatchResult
+    }
+
     class DrexPattern {
-        -string version
-        -string name
-        -integer editDistance
+        <<record>>
+        +string version
+        +string name
+        +string comment
+        +string bindObject
+        +int editDistance
+        +List~PatternElement~ elements
         +getVersion() string
         +getName() string
-        +getEditDistance() integer
-        +accept(visitor)
+        +getEditDistance() int
+        +isFuzzyMatchingEnabled() boolean
+        +accept(visitor) T
     }
 
     class Group {
-        +accept(visitor)
+        <<record>>
+        +string comment
+        +string bindObject
+        +List~PatternElement~ elements
+        +accept(visitor) T
     }
 
     class Repeat {
-        -RepeatMode mode
-        -string bindArray
-        +getMode() RepeatMode
+        <<record>>
+        +string comment
+        +Mode mode
+        +string bindArray
+        +List~PatternElement~ elements
+        +getMode() Mode
         +getBindArray() string
-        +accept(visitor)
+        +requiresMatch() boolean
+        +allowsMultiple() boolean
+        +accept(visitor) T
     }
 
     class Or {
-        +accept(visitor)
-    }
-
-    class LineElement {
-        <<abstract>>
-        +accept(visitor)
+        <<record>>
+        +string comment
+        +List~PatternElement~ elements
+        +getAlternatives() List~PatternElement~
+        +getAlternativeCount() int
+        +accept(visitor) T
     }
 
     class Line {
-        -string regex
-        -PropertyBinding[] bindProperties
+        <<record>>
+        +string comment
+        +string regex
+        +List~PropertyBinding~ bindProperties
+        +Pattern compiledPattern
         +getRegex() string
-        +getBindProperties() PropertyBinding[]
-        +accept(visitor)
+        +getBindProperties() List~PropertyBinding~
+        +getCompiledPattern() Pattern
+        +getBindingCount() int
+        +hasBindings() boolean
+        +getCaptureGroupCount() int
+        +compile() void
+        +match(inputLine) LineMatchResult
+        +accept(visitor) T
     }
 
     class Anyline {
-        -PropertyBinding[] bindProperties
-        +getBindProperties() PropertyBinding[]
-        +accept(visitor)
+        <<record>>
+        +string comment
+        +List~PropertyBinding~ bindProperties
+        +getBindProperties() List~PropertyBinding~
+        +getBindingCount() int
+        +hasBindings() boolean
+        +compile() void
+        +match(inputLine) LineMatchResult
+        +accept(visitor) T
     }
 
-    class RepeatMode {
+    class Mode {
         <<enumeration>>
-        zeroOrMore
-        oneOrMore
-        zeroOrOne
+        ZERO_OR_MORE
+        ONE_OR_MORE
+        ZERO_OR_ONE
+        +requiresMatch() boolean
+        +allowsMultiple() boolean
+        +getMaxMatches() int
+        +getMinMatches() int
     }
 
     class PropertyBinding {
-        -string property
-        -string format
+        <<record>>
+        +string property
+        +string format
         +getProperty() string
         +getFormat() string
+        +hasFormat() boolean
+    }
+
+    class LineMatchResult {
+        <<record>>
+        +boolean matched
+        +string matchedText
+        +List~String~ capturedGroups
+        +isMatched() boolean
+        +getCaptureCount() int
+        +getCapturedGroup(index) string
     }
 
 %% Relationships
-    PatternElement <|-- CompositePatternElement : extends
-    PatternElement <|-- LineElement : extends
+    PatternElement <|.. CompositePatternElement : extends
+    PatternElement <|.. LineElement : extends
 
-    CompositePatternElement <|-- GroupingPatternElement : extends
-    GroupingPatternElement <|-- DrexPattern : extends
-    GroupingPatternElement <|-- Group : extends
+    CompositePatternElement <|.. GroupingPatternElement : extends
+    GroupingPatternElement <|.. DrexPattern : implements
+    GroupingPatternElement <|.. Group : implements
 
-    CompositePatternElement <|-- Repeat : extends
-    CompositePatternElement <|-- Or : extends
+    CompositePatternElement <|.. Repeat : implements
+    CompositePatternElement <|.. Or : implements
 
-    LineElement <|-- Line : extends
-    LineElement <|-- Anyline : extends
+    LineElement <|.. Line : implements
+    LineElement <|.. Anyline : implements
 
     CompositePatternElement "1" *-- "many" PatternElement : contains
 
-    Repeat --> RepeatMode : uses
+    Repeat *-- Mode : nested enum
     Line "1" *-- "0..many" PropertyBinding : bindProperties
     Anyline "1" *-- "0..many" PropertyBinding : bindProperties
+    Line --> LineMatchResult : returns
+    Anyline --> LineMatchResult : returns
 
 %% Self-referencing for recursive structure
     PatternElement ..> PatternElement : references

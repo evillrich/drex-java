@@ -1,5 +1,6 @@
 package io.github.evillrich.drex.engine;
 
+import io.github.evillrich.drex.pattern.DrexPattern;
 import java.util.Objects;
 
 /**
@@ -27,6 +28,29 @@ public final class NFA {
     public NFA(State initialState, State finalState) {
         this.initialState = Objects.requireNonNull(initialState, "Initial state cannot be null");
         this.finalState = Objects.requireNonNull(finalState, "Final state cannot be null");
+    }
+
+    /**
+     * Creates an NFA from the specified DrexPattern.
+     * <p>
+     * This factory method constructs an NFA by visiting the pattern elements
+     * using the visitor pattern. The pattern is first compiled to ensure all
+     * regex patterns are valid before NFA construction.
+     *
+     * @param pattern the DrexPattern to convert to NFA, must not be null
+     * @return the constructed NFA for the pattern, never null
+     * @throws IllegalArgumentException if pattern is null
+     * @throws io.github.evillrich.drex.pattern.PatternCompilationException if pattern compilation fails
+     */
+    public static NFA fromPattern(DrexPattern pattern) {
+        Objects.requireNonNull(pattern, "pattern must not be null");
+        
+        // Compile the pattern first to ensure all regex patterns are valid
+        pattern.compile();
+        
+        // Build the NFA using the visitor pattern
+        NFABuilder builder = new NFABuilder(pattern);
+        return builder.visitDrexPattern(pattern);
     }
 
     /**

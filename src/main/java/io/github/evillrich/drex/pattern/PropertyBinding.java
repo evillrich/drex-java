@@ -1,7 +1,5 @@
 package io.github.evillrich.drex.pattern;
 
-import java.util.Objects;
-
 /**
  * Represents a binding between a regex capture group and a JSON property.
  * <p>
@@ -14,33 +12,37 @@ import java.util.Objects;
  * <p>
  * Instances are immutable and thread-safe.
  *
+ * @param property the JSON property name to bind to, never null or empty
+ * @param format optional formatter function name, may be null for no formatting
  * @since 1.0
  * @see Line
  * @see Anyline
  */
-public final class PropertyBinding {
-
-    private final String property;
-    private final String format;
+public record PropertyBinding(
+    String property,
+    String format
+) {
 
     /**
-     * Constructs a new PropertyBinding with the specified property name and formatter.
-     *
-     * @param property the JSON property name to bind to, must not be null or empty
-     * @param format optional formatter function name, may be null for no formatting
-     * @throws IllegalArgumentException if property is null or empty
+     * Creates a PropertyBinding with validation and trimming.
      */
-    public PropertyBinding(String property, String format) {
+    public PropertyBinding {
         if (property == null || property.trim().isEmpty()) {
             throw new IllegalArgumentException("property must not be null or empty");
         }
         
-        this.property = property.trim();
-        this.format = format != null ? format.trim() : null;
+        // Trim the property and format strings
+        property = property.trim();
+        format = format != null ? format.trim() : null;
+        
+        // Convert empty format strings to null for consistency
+        if (format != null && format.isEmpty()) {
+            format = null;
+        }
     }
 
     /**
-     * Constructs a new PropertyBinding with the specified property name and no formatter.
+     * Creates a new PropertyBinding with the specified property name and no formatter.
      *
      * @param property the JSON property name to bind to, must not be null or empty
      * @throws IllegalArgumentException if property is null or empty
@@ -78,6 +80,8 @@ public final class PropertyBinding {
 
     /**
      * Returns the JSON property name that captured text will be bound to.
+     * <p>
+     * This is a convenience method equivalent to accessing the {@code property} component directly.
      *
      * @return the property name, never null or empty
      */
@@ -91,6 +95,8 @@ public final class PropertyBinding {
      * Formatters are used to normalize captured text into consistent string formats
      * before binding to JSON properties. Common formatters include currency(),
      * parseDate(), and trim().
+     * <p>
+     * This is a convenience method equivalent to accessing the {@code format} component directly.
      *
      * @return the formatter function name, or null if no formatting is applied
      */
@@ -104,27 +110,14 @@ public final class PropertyBinding {
      * @return true if a formatter is specified, false otherwise
      */
     public boolean hasFormat() {
-        return format != null && !format.isEmpty();
+        return format != null;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-        PropertyBinding that = (PropertyBinding) obj;
-        return Objects.equals(property, that.property) &&
-               Objects.equals(format, that.format);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(property, format);
-    }
-
+    /**
+     * Returns a string representation of this PropertyBinding.
+     * <p>
+     * Includes the property name and format (if present).
+     */
     @Override
     public String toString() {
         return "PropertyBinding[property=" + property + 

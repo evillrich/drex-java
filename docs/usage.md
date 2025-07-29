@@ -51,7 +51,7 @@ Composite elements (`group`, `repeat`, `or`) also contain `elements` arrays for 
           { 
             "repeat": {
               "bindArray": "items",
-              "mode": "oneOrMore",
+              "mode": "ONE_OR_MORE",
               "elements": [
                 { 
                   "line": { 
@@ -137,7 +137,7 @@ DrexPattern pattern = DrexPattern.builder()
                     .build(),
                 Repeat.builder()
                     .bindArray("items")
-                    .mode(RepeatMode.ONE_OR_MORE)
+                    .mode(Repeat.Mode.ONE_OR_MORE)
                     .elements(
                         Line.builder()
                             .regex("(\\\\S+)\\\\s+(\\\\d+)\\\\s+([\\\\d\\\\.]+)")
@@ -158,12 +158,16 @@ DrexPattern pattern = DrexPattern.builder()
 ### PropertyBinding Creation
 
 ```java
+import io.github.evillrich.drex.*;
+import java.util.Arrays;
+import java.util.List;
+
 // Simple property binding
-PropertyBinding.of("propertyName")
+PropertyBinding.of("propertyName");
 
 // With formatter
-PropertyBinding.of("amount", "currency()")
-PropertyBinding.of("date", "parseDate(MM/dd/yyyy)")
+PropertyBinding.of("amount", "currency()");
+PropertyBinding.of("date", "parseDate(MM/dd/yyyy)");
 
 // Multiple bindings
 List<PropertyBinding> bindings = Arrays.asList(
@@ -177,14 +181,16 @@ List<PropertyBinding> bindings = Arrays.asList(
 
 **Line Elements:**
 ```java
+import io.github.evillrich.drex.pattern.*;
+
 // Basic line matching
-Line.builder()
+Line totalLine = Line.builder()
     .regex("Total: ([\\\\d\\\\.]+)")
     .bindProperties(PropertyBinding.of("total"))
-    .build()
+    .build();
 
 // Line with multiple captures and formatters
-Line.builder()
+Line orderLine = Line.builder()
     .regex("Order #(\\\\w+) Date: ([\\\\d/]+) Customer: (.+)")
     .bindProperties(
         PropertyBinding.of("orderNumber"),
@@ -192,25 +198,29 @@ Line.builder()
         PropertyBinding.of("customerName", "trim()")
     )
     .comment("Extract order header information")
-    .build()
+    .build();
 ```
 
 **Anyline Elements:**
 ```java
+import io.github.evillrich.drex.pattern.*;
+
 // Skip unknown lines
-Anyline.builder()
+Anyline skipLine = Anyline.builder()
     .comment("Skip blank or unknown lines")
-    .build()
+    .build();
 
 // Anyline with binding (rare)
-Anyline.builder()
+Anyline captureAnyline = Anyline.builder()
     .bindProperties(PropertyBinding.of("skippedContent"))
-    .build()
+    .build();
 ```
 
 **Group Elements:**
 ```java
-Group.builder()
+import io.github.evillrich.drex.pattern.*;
+
+Group customerGroup = Group.builder()
     .bindObject("customer")
     .comment("Customer information section")
     .elements(
@@ -223,15 +233,17 @@ Group.builder()
             .bindProperties(PropertyBinding.of("address"))
             .build()
     )
-    .build()
+    .build();
 ```
 
 **Repeat Elements:**
 ```java
+import io.github.evillrich.drex.pattern.*;
+
 // One or more iterations
-Repeat.builder()
+Repeat lineItemsRepeat = Repeat.builder()
     .bindArray("lineItems")
-    .mode(RepeatMode.ONE_OR_MORE)
+    .mode(Repeat.Mode.ONE_OR_MORE)
     .elements(
         Line.builder()
             .regex("(\\\\d+)\\\\s+(.+)\\\\s+\\\\$([\\\\d\\\\.]+)")
@@ -242,36 +254,38 @@ Repeat.builder()
             )
             .build()
     )
-    .build()
+    .build();
 
 // Zero or more iterations
-Repeat.builder()
+Repeat notesRepeat = Repeat.builder()
     .bindArray("optionalNotes")
-    .mode(RepeatMode.ZERO_OR_MORE)
+    .mode(Repeat.Mode.ZERO_OR_MORE)
     .elements(
         Line.builder()
             .regex("Note: (.+)")
             .bindProperties(PropertyBinding.of("note"))
             .build()
     )
-    .build()
+    .build();
 
 // Zero or one iteration
-Repeat.builder()
+Repeat signatureRepeat = Repeat.builder()
     .bindArray("signature")
-    .mode(RepeatMode.ZERO_OR_ONE)
+    .mode(Repeat.Mode.ZERO_OR_ONE)
     .elements(
         Line.builder()
             .regex("Signature: (.+)")
             .bindProperties(PropertyBinding.of("name"))
             .build()
     )
-    .build()
+    .build();
 ```
 
 **Or Elements:**
 ```java
-Or.builder()
+import io.github.evillrich.drex.pattern.*;
+
+Or totalFormats = Or.builder()
     .comment("Handle different total formats")
     .elements(
         Line.builder()
@@ -287,15 +301,18 @@ Or.builder()
             .bindProperties(PropertyBinding.of("total", "currency()"))
             .build()
     )
-    .build()
+    .build();
 ```
 
 ### Advanced Pattern Features
 
 **Fuzzy Matching:**
 ```java
+import io.github.evillrich.drex.pattern.*;
+
 DrexPattern fuzzPattern = DrexPattern.builder()
     .name("OCRTolerantPattern")
+    .version("1.0")
     .editDistance(2)  // Allow up to 2 character edits
     .bindObject("document")
     .elements(
@@ -310,8 +327,11 @@ DrexPattern fuzzPattern = DrexPattern.builder()
 
 **Nested Structures:**
 ```java
+import io.github.evillrich.drex.pattern.*;
+
 DrexPattern complexPattern = DrexPattern.builder()
     .name("ComplexDocumentPattern")
+    .version("1.0")
     .bindObject("document")
     .elements(
         Group.builder()
@@ -329,9 +349,10 @@ DrexPattern complexPattern = DrexPattern.builder()
             .build(),
         Repeat.builder()
             .bindArray("sections")
-            .mode(RepeatMode.ONE_OR_MORE)
+            .mode(Repeat.Mode.ONE_OR_MORE)
             .elements(
                 Group.builder()
+                    .bindObject("section")
                     .elements(
                         Line.builder()
                             .regex("Section: (.+)")
@@ -339,7 +360,7 @@ DrexPattern complexPattern = DrexPattern.builder()
                             .build(),
                         Repeat.builder()
                             .bindArray("items")
-                            .mode(RepeatMode.ZERO_OR_MORE)
+                            .mode(Repeat.Mode.ZERO_OR_MORE)
                             .elements(
                                 Line.builder()
                                     .regex("  - (.+)")
@@ -362,6 +383,9 @@ DrexPattern complexPattern = DrexPattern.builder()
 ### Basic Usage
 
 ```java
+import io.github.evillrich.drex.pattern.*;
+import io.github.evillrich.drex.engine.*;
+
 // Execute pattern against a document
 String document = """
     Invoice #12345
@@ -383,6 +407,10 @@ if (result.isMatch()) {
 ### Error Handling
 
 ```java
+import io.github.evillrich.drex.pattern.*;
+import io.github.evillrich.drex.engine.*;
+import com.fasterxml.jackson.databind.JsonNode;
+
 try {
     MatchResult result = DrexEngine.match(pattern, document);
     
@@ -404,6 +432,9 @@ try {
 ### Position Metadata
 
 ```java
+import io.github.evillrich.drex.engine.*;
+import io.github.evillrich.drex.pattern.*;
+
 // Enable position tracking for debugging/UI
 DrexEngine engine = DrexEngine.builder()
     .enablePositionTracking(true)
@@ -429,6 +460,11 @@ if (result.isMatch()) {
 ### From JSON Files
 
 ```java
+import io.github.evillrich.drex.pattern.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.io.IOException;
+
 // Load pattern from JSON file
 String patternJson = Files.readString(Paths.get("patterns/invoice-pattern.json"));
 DrexPattern pattern = PatternDeserializer.deserialize(patternJson);
@@ -446,9 +482,16 @@ if (!validation.isValid()) {
 ### Pattern Serialization
 
 ```java
+import io.github.evillrich.drex.pattern.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.io.IOException;
+
 // Convert Java pattern to JSON
 DrexPattern pattern = DrexPattern.builder()
     .name("MyPattern")
+    .version("1.0")
+    .bindObject("root")
     .elements(/* pattern elements */)
     .build();
 
@@ -503,7 +546,7 @@ Files.writeString(Paths.get("my-pattern.json"), json);
 {"line": {"regex": "Total: \\$([\\d\\.]+)"}}
 
 // Java Fluent API equivalent  
-Line.builder().regex("Total: \\\\$([\\\\d\\\\.]+)")
+Line totalLine = Line.builder().regex("Total: \\\\$([\\\\d\\\\.]+)").bindProperties(/* PropertyBinding... */).build();
 ```
 
 #### Pattern Not Matching Expected Lines
@@ -517,6 +560,10 @@ Line.builder().regex("Total: \\\\$([\\\\d\\\\.]+)")
 4. **Check line endings** - Windows (`\r\n`) vs Unix (`\n`)
 
 ```java
+import io.github.evillrich.drex.engine.*;
+import io.github.evillrich.drex.pattern.*;
+
+// Note: DrexEngine builder API may still exist - check current implementation
 DrexEngine engine = DrexEngine.builder()
     .enablePositionTracking(true)
     .build();
@@ -540,11 +587,13 @@ if (!result.isMatch()) {
 3. **Reorder elements** to handle edge cases
 
 ```java
+import io.github.evillrich.drex.pattern.*;
+
 // Instead of this generic pattern:
-Line.builder().regex("(\\S+)\\s+(\\d+)\\s+([\\d.]+)")
+Line genericLine = Line.builder().regex("(\\S+)\\s+(\\d+)\\s+([\\d.]+)").bindProperties(/* PropertyBinding... */).build();
 
 // Use specific context:
-Line.builder().regex("^(?!Total:)(\\S+)\\s+(\\d+)\\s+([\\d.]+)")
+Line specificLine = Line.builder().regex("^(?!Total:)(\\S+)\\s+(\\d+)\\s+([\\d.]+)").bindProperties(/* PropertyBinding... */).build();
 ```
 
 #### Performance Issues with Large Documents
@@ -558,14 +607,16 @@ Line.builder().regex("^(?!Total:)(\\S+)\\s+(\\d+)\\s+([\\d.]+)")
 4. **Process documents in chunks** if possible
 
 ```java
+import io.github.evillrich.drex.pattern.*;
+
 // Efficient pattern ordering in 'or' elements
-Or.builder()
+Or efficientOr = Or.builder()
     .elements(
         Line.builder().regex("Specific Pattern").build(),  // Most common first
         Line.builder().regex("Less Specific").build(),     // Less common second
         Anyline.builder().build()                          // Fallback last
     )
-    .build()
+    .build();
 ```
 
 #### Formatter Not Working as Expected
@@ -578,6 +629,8 @@ Or.builder()
 3. **Verify formatter parameters** match input format
 
 ```java
+import io.github.evillrich.drex.engine.*;
+
 // Enable position tracking to see original vs formatted values
 PositionMetadata positions = result.getPositionMetadata();
 String original = positions.getOriginalText("invoice.date");
@@ -596,6 +649,8 @@ System.out.println("Original: '" + original + "' → Formatted: '" + formatted +
 4. **Invalid property names**: Property names must be valid JSON keys
 
 ```java
+import io.github.evillrich.drex.pattern.*;
+
 PatternValidator validator = new PatternValidator();
 ValidationResult validation = validator.validate(patternJson);
 
