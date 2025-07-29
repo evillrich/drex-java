@@ -1,7 +1,6 @@
 package io.github.evillrich.drex.pattern;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
