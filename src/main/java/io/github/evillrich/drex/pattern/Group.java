@@ -19,7 +19,7 @@ import java.util.Objects;
  * @since 1.0
  * @see GroupingPatternElement
  */
-public final class Group implements GroupingPatternElement {
+public final class Group extends GroupingPatternElement {
 
     private final String comment;
     private final String bindObject;

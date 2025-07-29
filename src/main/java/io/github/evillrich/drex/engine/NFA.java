@@ -45,9 +45,6 @@ public final class NFA {
     public static NFA fromPattern(DrexPattern pattern) {
         Objects.requireNonNull(pattern, "pattern must not be null");
         
-        // Compile the pattern first to ensure all regex patterns are valid
-        pattern.compile();
-        
         // Build the NFA using the visitor pattern
         NFABuilder builder = new NFABuilder(pattern);
         return builder.visitDrexPattern(pattern);

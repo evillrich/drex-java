@@ -22,7 +22,7 @@ import java.util.Objects;
  * @see Mode
  * @see CompositePatternElement
  */
-public final class Repeat implements CompositePatternElement {
+public final class Repeat extends CompositePatternElement {
 
     /**
      * Enumeration of repeat modes for {@link Repeat} pattern elements.

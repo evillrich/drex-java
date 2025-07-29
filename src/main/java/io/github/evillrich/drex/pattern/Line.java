@@ -25,7 +25,7 @@ import java.util.regex.PatternSyntaxException;
  * @see LineElement
  * @see PropertyBinding
  */
-public final class Line implements LineElement {
+public final class Line extends LineElement {
 
     private final String comment;
     private final String regex;
@@ -107,7 +107,7 @@ public final class Line implements LineElement {
      */
     public Pattern compiledPattern() {
         if (compiledPattern == null) {
-            compile();
+            compileElement();
         }
         return compiledPattern;
     }
@@ -140,13 +140,13 @@ public final class Line implements LineElement {
      */
     public int getCaptureGroupCount() {
         if (compiledPattern == null) {
-            compile();
+            compileElement();
         }
         return compiledPattern.matcher("").groupCount();
     }
 
     @Override
-    public void compile() {
+    protected void compileElement() {
         // Only compile if not already compiled
         if (compiledPattern == null) {
             try {
@@ -162,7 +162,7 @@ public final class Line implements LineElement {
         Objects.requireNonNull(inputLine, "inputLine must not be null");
         
         if (compiledPattern == null) {
-            compile();
+            compileElement();
         }
         
         Matcher matcher = compiledPattern.matcher(inputLine);
@@ -211,7 +211,7 @@ public final class Line implements LineElement {
      */
     public Pattern getCompiledPattern() {
         if (compiledPattern == null) {
-            compile();
+            compileElement();
         }
         return compiledPattern;
     }

@@ -29,7 +29,7 @@ import java.util.Objects;
  * @see LineElement
  * @see PropertyBinding
  */
-public final class Anyline implements LineElement {
+public final class Anyline extends LineElement {
 
     private final String comment;
     private final List<PropertyBinding> bindProperties;
@@ -115,7 +115,7 @@ public final class Anyline implements LineElement {
     }
 
     @Override
-    public void compile() {
+    protected void compileElement() {
         // Anyline doesn't need compilation - no-op but required by interface
         // This method is idempotent and can be called multiple times safely
     }

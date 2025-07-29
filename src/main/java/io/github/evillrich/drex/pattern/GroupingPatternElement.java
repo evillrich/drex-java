@@ -1,7 +1,7 @@
 package io.github.evillrich.drex.pattern;
 
 /**
- * Interface for pattern elements that create JSON object contexts.
+ * Abstract base class for pattern elements that create JSON object contexts.
  * <p>
  * GroupingPatternElement represents pattern elements that bind their extracted
  * data to named JSON objects. This includes the root DrexPattern and Group
@@ -13,7 +13,7 @@ package io.github.evillrich.drex.pattern;
  * @see DrexPattern
  * @see Group
  */
-public interface GroupingPatternElement extends CompositePatternElement {
+public abstract class GroupingPatternElement extends CompositePatternElement {
 
     /**
      * Returns the name of the JSON object that this element creates.
@@ -24,5 +24,5 @@ public interface GroupingPatternElement extends CompositePatternElement {
      *
      * @return the object binding name, never null or empty
      */
-    String getBindObject();
+    public abstract String getBindObject();
 }

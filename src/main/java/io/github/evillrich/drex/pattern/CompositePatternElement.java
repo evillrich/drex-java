@@ -3,10 +3,10 @@ package io.github.evillrich.drex.pattern;
 import java.util.List;
 
 /**
- * Interface for pattern elements that contain other pattern elements.
+ * Abstract base class for pattern elements that contain other pattern elements.
  * <p>
  * CompositePatternElement represents pattern elements that have child elements,
- * such as groups, repeats, and or-alternatives. This interface provides common
+ * such as groups, repeats, and or-alternatives. This class provides common
  * functionality for managing collections of child pattern elements.
  * <p>
  * Implementations are immutable and thread-safe.
@@ -14,7 +14,7 @@ import java.util.List;
  * @since 1.0
  * @see PatternElement
  */
-public interface CompositePatternElement extends PatternElement {
+public abstract class CompositePatternElement extends PatternElement {
 
     /**
      * Returns an immutable list of child pattern elements.
@@ -23,14 +23,14 @@ public interface CompositePatternElement extends PatternElement {
      *
      * @return an unmodifiable list of child elements, never null but may be empty
      */
-    List<PatternElement> getElements();
+    public abstract List<PatternElement> getElements();
 
     /**
      * Returns the number of child elements.
      *
      * @return the number of child elements, zero or greater
      */
-    default int getElementCount() {
+    public int getElementCount() {
         return getElements().size();
     }
 
@@ -39,7 +39,7 @@ public interface CompositePatternElement extends PatternElement {
      *
      * @return true if empty, false otherwise
      */
-    default boolean isEmpty() {
+    public boolean isEmpty() {
         return getElements().isEmpty();
     }
 
@@ -55,10 +55,10 @@ public interface CompositePatternElement extends PatternElement {
      * @throws PatternCompilationException if any child element cannot be compiled
      */
     @Override
-    default void compile() {
+    protected void compileElement() {
         // Compile all child elements
         for (PatternElement element : getElements()) {
-            element.compile();
+            element.compileElement();
         }
     }
 }
