@@ -1,6 +1,5 @@
 package io.github.evillrich.drex.pattern;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -21,20 +20,22 @@ import java.util.Objects;
  * <p>
  * Instances are immutable and thread-safe.
  *
- * @param comment optional descriptive comment, may be null
- * @param elements the alternative pattern elements, never null and never empty
  * @since 1.0
  * @see CompositePatternElement
  */
-public record Or(
-    String comment,
-    List<PatternElement> elements
-) implements CompositePatternElement {
+public final class Or implements CompositePatternElement {
+
+    private final String comment;
+    private final List<PatternElement> elements;
 
     /**
-     * Creates an Or record with validation and immutable list creation.
+     * Creates an Or with validation and immutable list creation.
+     *
+     * @param comment optional descriptive comment, may be null
+     * @param elements the alternative pattern elements, never null and never empty
+     * @throws IllegalArgumentException if elements is null, empty, or contains null values
      */
-    public Or {
+    public Or(String comment, List<PatternElement> elements) {
         Objects.requireNonNull(elements, "elements must not be null");
         
         if (elements.isEmpty()) {
@@ -49,7 +50,8 @@ public record Or(
         }
         
         // Create immutable list
-        elements = List.copyOf(elements);
+        this.comment = comment;
+        this.elements = List.copyOf(elements);
     }
 
     /**
@@ -64,10 +66,27 @@ public record Or(
     }
 
     /**
+     * Returns the optional comment.
+     *
+     * @return the comment string, or null if no comment was provided
+     */
+    public String comment() {
+        return comment;
+    }
+
+    /**
+     * Returns the alternative pattern elements.
+     *
+     * @return an immutable list of alternative elements, never null or empty
+     */
+    public List<PatternElement> elements() {
+        return elements;
+    }
+
+    /**
      * Returns the alternative pattern elements.
      * <p>
      * Alternatives are tried in order, and the first successful match is used.
-     * This is a convenience method equivalent to accessing the {@code elements} component directly.
      *
      * @return the list of alternative elements, never null or empty
      */
@@ -92,8 +111,6 @@ public record Or(
 
     /**
      * Returns an immutable list of child pattern elements.
-     * <p>
-     * This is a convenience method equivalent to accessing the {@code elements} component directly.
      *
      * @return an unmodifiable list of child elements, never null but may be empty
      */
@@ -104,8 +121,6 @@ public record Or(
 
     /**
      * Returns the optional comment associated with this pattern element.
-     * <p>
-     * This is a convenience method equivalent to accessing the {@code comment} component directly.
      *
      * @return the comment string, or null if no comment was provided
      */
@@ -115,78 +130,88 @@ public record Or(
     }
 
     /**
-     * Creates a new OrBuilder for fluent construction of Or instances.
+     * Creates a builder-style pattern construction (backward compatibility).
      *
-     * @return a new OrBuilder instance, never null
+     * @return a new Or instance for fluent construction
      */
-    public static OrBuilder builder() {
-        return new OrBuilder();
+    public static Or builder() {
+        return new Or(null, List.of());
     }
 
     /**
-     * A fluent builder for constructing Or instances.
-     * <p>
-     * This builder provides a fluent interface for creating Or pattern elements
-     * with validation and type safety. The builder is mutable during construction
-     * but produces immutable Or records.
-     * <p>
-     * Example usage:
-     * <pre>{@code
-     * Or or = Or.builder()
-     *     .comment("Handle different total formats")
-     *     .elements(
-     *         Line.builder().regex("Total: \\$([\\d,]+\\.\\d{2})").bindProperties(PropertyBinding.of("total")).build(),
-     *         Line.builder().regex("Amount Due: \\$([\\d,]+\\.\\d{2})").bindProperties(PropertyBinding.of("total")).build(),
-     *         Line.builder().regex("Final Total: ([\\d,]+\\.\\d{2})").bindProperties(PropertyBinding.of("total")).build()
-     *     )
-     *     .build();
-     * }</pre>
+     * Sets the comment for this or pattern.
+     *
+     * @param comment optional descriptive comment, may be null
+     * @return a new Or instance for method chaining
      */
-    public static class OrBuilder {
-        private String comment;
-        private List<PatternElement> elements = new ArrayList<>();
+    public Or comment(String comment) {
+        return new Or(comment, this.elements);
+    }
 
-        /**
-         * Sets the comment for this or pattern.
-         *
-         * @param comment optional descriptive comment, may be null
-         * @return this builder for method chaining
-         */
-        public OrBuilder comment(String comment) {
-            this.comment = comment;
-            return this;
-        }
+    /**
+     * Sets the alternative pattern elements for this or.
+     *
+     * @param elements the alternative pattern elements, must not be null
+     * @return a new Or instance for method chaining
+     */
+    public Or elements(PatternElement... elements) {
+        return new Or(this.comment, List.of(elements));
+    }
 
-        /**
-         * Sets the alternative pattern elements.
-         *
-         * @param elements the alternative pattern elements, must not be null and should contain at least one element
-         * @return this builder for method chaining
-         */
-        public OrBuilder elements(PatternElement... elements) {
-            this.elements = List.of(elements);
-            return this;
-        }
+    /**
+     * Sets the alternative pattern elements for this or.
+     *
+     * @param elements the alternative pattern elements, must not be null
+     * @return a new Or instance for method chaining
+     */
+    public Or elements(List<PatternElement> elements) {
+        return new Or(this.comment, elements);
+    }
 
-        /**
-         * Sets the alternative pattern elements.
-         *
-         * @param elements the alternative pattern elements, must not be null and should contain at least one element
-         * @return this builder for method chaining
-         */
-        public OrBuilder elements(List<PatternElement> elements) {
-            this.elements = List.copyOf(elements);
-            return this;
-        }
+    /**
+     * Completes the fluent construction.
+     *
+     * @return this Or instance
+     */
+    public Or build() {
+        return this;
+    }
 
-        /**
-         * Builds and returns a new Or instance with the configured properties.
-         *
-         * @return a new Or instance, never null
-         * @throws IllegalArgumentException if elements is null or contains null values
-         */
-        public Or build() {
-            return new Or(comment, elements);
-        }
+    /**
+     * Indicates whether some other object is "equal to" this one.
+     *
+     * @param obj the reference object with which to compare
+     * @return true if this object is the same as the obj argument; false otherwise
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Or or = (Or) obj;
+        return Objects.equals(comment, or.comment) &&
+               Objects.equals(elements, or.elements);
+    }
+
+    /**
+     * Returns a hash code value for the object.
+     *
+     * @return a hash code value for this object
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(comment, elements);
+    }
+
+    /**
+     * Returns a string representation of this Or.
+     *
+     * @return a string representation of this object
+     */
+    @Override
+    public String toString() {
+        return "Or[" +
+               (comment != null ? "comment=" + comment + ", " : "") +
+               "elements=" + elements.size() + " alternatives" +
+               "]";
     }
 }

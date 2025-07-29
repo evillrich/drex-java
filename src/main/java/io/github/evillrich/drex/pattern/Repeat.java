@@ -1,6 +1,5 @@
 package io.github.evillrich.drex.pattern;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -19,20 +18,11 @@ import java.util.Objects;
  * <p>
  * Instances are immutable and thread-safe.
  *
- * @param comment optional descriptive comment, may be null
- * @param mode the repeat mode determining matching behavior, never null
- * @param bindArray the name of the JSON array to create, never null or empty
- * @param elements the child pattern elements, never null but may be empty
  * @since 1.0
  * @see Mode
  * @see CompositePatternElement
  */
-public record Repeat(
-    String comment,
-    Mode mode,
-    String bindArray,
-    List<PatternElement> elements
-) implements CompositePatternElement {
+public final class Repeat implements CompositePatternElement {
 
     /**
      * Enumeration of repeat modes for {@link Repeat} pattern elements.
@@ -108,10 +98,22 @@ public record Repeat(
         }
     }
 
+    private final String comment;
+    private final Mode mode;
+    private final String bindArray;
+    private final List<PatternElement> elements;
+
     /**
-     * Creates a Repeat record with validation and immutable list creation.
+     * Creates a Repeat with validation and immutable list creation.
+     *
+     * @param comment optional descriptive comment, may be null
+     * @param mode the repeat mode determining matching behavior, never null
+     * @param bindArray the name of the JSON array to create, never null or empty
+     * @param elements the child pattern elements, never null but may be empty
+     * @throws IllegalArgumentException if mode is null, bindArray is null/empty, 
+     *                                  or elements contains null values
      */
-    public Repeat {
+    public Repeat(String comment, Mode mode, String bindArray, List<PatternElement> elements) {
         Objects.requireNonNull(mode, "mode must not be null");
         if (bindArray == null || bindArray.trim().isEmpty()) {
             throw new IllegalArgumentException("bindArray must not be null or empty");
@@ -126,8 +128,10 @@ public record Repeat(
         }
         
         // Trim bindArray and create immutable list
-        bindArray = bindArray.trim();
-        elements = List.copyOf(elements);
+        this.comment = comment;
+        this.mode = mode;
+        this.bindArray = bindArray.trim();
+        this.elements = List.copyOf(elements);
     }
 
     /**
@@ -142,6 +146,42 @@ public record Repeat(
      */
     public Repeat(String comment, Mode mode, String bindArray, PatternElement... elements) {
         this(comment, mode, bindArray, List.of(elements));
+    }
+
+    /**
+     * Returns the optional comment.
+     *
+     * @return the comment string, or null if no comment was provided
+     */
+    public String comment() {
+        return comment;
+    }
+
+    /**
+     * Returns the repeat mode.
+     *
+     * @return the repeat mode, never null
+     */
+    public Mode mode() {
+        return mode;
+    }
+
+    /**
+     * Returns the name of the JSON array to create.
+     *
+     * @return the array binding name, never null or empty
+     */
+    public String bindArray() {
+        return bindArray;
+    }
+
+    /**
+     * Returns the child pattern elements.
+     *
+     * @return an immutable list of child elements, never null but may be empty
+     */
+    public List<PatternElement> elements() {
+        return elements;
     }
 
     /**
@@ -170,8 +210,6 @@ public record Repeat(
 
     /**
      * Returns an immutable list of child pattern elements.
-     * <p>
-     * This is a convenience method equivalent to accessing the {@code elements} component directly.
      *
      * @return an unmodifiable list of child elements, never null but may be empty
      */
@@ -182,8 +220,6 @@ public record Repeat(
 
     /**
      * Returns the repeat mode that determines matching behavior.
-     * <p>
-     * This is a convenience method equivalent to accessing the {@code mode} component directly.
      *
      * @return the repeat mode, never null
      */
@@ -193,8 +229,6 @@ public record Repeat(
 
     /**
      * Returns the name of the JSON array that will contain the matched elements.
-     * <p>
-     * This is a convenience method equivalent to accessing the {@code bindArray} component directly.
      *
      * @return the array binding name, never null or empty
      */
@@ -204,8 +238,6 @@ public record Repeat(
 
     /**
      * Returns the optional comment associated with this pattern element.
-     * <p>
-     * This is a convenience method equivalent to accessing the {@code comment} component directly.
      *
      * @return the comment string, or null if no comment was provided
      */
@@ -215,107 +247,112 @@ public record Repeat(
     }
 
     /**
-     * Creates a new RepeatBuilder for fluent construction of Repeat instances.
+     * Creates a builder-style pattern construction (backward compatibility).
      *
-     * @return a new RepeatBuilder instance, never null
+     * @return a new Repeat instance for fluent construction
      */
-    public static RepeatBuilder builder() {
-        return new RepeatBuilder();
+    public static Repeat builder() {
+        return new Repeat(null, Mode.ZERO_OR_MORE, "", List.of());
     }
 
     /**
-     * A fluent builder for constructing Repeat instances.
-     * <p>
-     * This builder provides a fluent interface for creating Repeat pattern elements
-     * with validation and type safety. The builder is mutable during construction
-     * but produces immutable Repeat records.
-     * <p>
-     * Example usage:
-     * <pre>{@code
-     * Repeat repeat = Repeat.builder()
-     *     .comment("Process line items")
-     *     .mode(Repeat.Mode.ONE_OR_MORE)
-     *     .bindArray("items")
-     *     .elements(
-     *         Line.builder().regex("(.+)\\s+(\\d+)\\s+([\\d.]+)").bindProperties(
-     *             PropertyBinding.of("name"),
-     *             PropertyBinding.of("quantity"),
-     *             PropertyBinding.of("price")
-     *         ).build()
-     *     )
-     *     .build();
-     * }</pre>
+     * Sets the comment for this repeat pattern.
+     *
+     * @param comment optional descriptive comment, may be null
+     * @return a new Repeat instance for method chaining
      */
-    public static class RepeatBuilder {
-        private String comment;
-        private Mode mode;
-        private String bindArray;
-        private List<PatternElement> elements = new ArrayList<>();
+    public Repeat comment(String comment) {
+        return new Repeat(comment, this.mode, this.bindArray, this.elements);
+    }
 
-        /**
-         * Sets the comment for this repeat pattern.
-         *
-         * @param comment optional descriptive comment, may be null
-         * @return this builder for method chaining
-         */
-        public RepeatBuilder comment(String comment) {
-            this.comment = comment;
-            return this;
-        }
+    /**
+     * Sets the repeat mode that determines matching behavior.
+     *
+     * @param mode the repeat mode determining matching behavior, must not be null
+     * @return a new Repeat instance for method chaining
+     */
+    public Repeat mode(Mode mode) {
+        return new Repeat(this.comment, mode, this.bindArray, this.elements);
+    }
 
-        /**
-         * Sets the repeat mode that determines matching behavior.
-         *
-         * @param mode the repeat mode determining matching behavior, must not be null
-         * @return this builder for method chaining
-         */
-        public RepeatBuilder mode(Mode mode) {
-            this.mode = mode;
-            return this;
-        }
+    /**
+     * Sets the name of the JSON array that will contain the matched elements.
+     *
+     * @param bindArray the name of the JSON array to create, must not be null or empty
+     * @return a new Repeat instance for method chaining
+     */
+    public Repeat bindArray(String bindArray) {
+        return new Repeat(this.comment, this.mode, bindArray, this.elements);
+    }
 
-        /**
-         * Sets the name of the JSON array that will contain the matched elements.
-         *
-         * @param bindArray the name of the JSON array to create, must not be null or empty
-         * @return this builder for method chaining
-         */
-        public RepeatBuilder bindArray(String bindArray) {
-            this.bindArray = bindArray;
-            return this;
-        }
+    /**
+     * Sets the child pattern elements for this repeat.
+     *
+     * @param elements the child pattern elements, must not be null
+     * @return a new Repeat instance for method chaining
+     */
+    public Repeat elements(PatternElement... elements) {
+        return new Repeat(this.comment, this.mode, this.bindArray, List.of(elements));
+    }
 
-        /**
-         * Sets the child pattern elements for this repeat.
-         *
-         * @param elements the child pattern elements, must not be null
-         * @return this builder for method chaining
-         */
-        public RepeatBuilder elements(PatternElement... elements) {
-            this.elements = List.of(elements);
-            return this;
-        }
+    /**
+     * Sets the child pattern elements for this repeat.
+     *
+     * @param elements the child pattern elements, must not be null
+     * @return a new Repeat instance for method chaining
+     */
+    public Repeat elements(List<PatternElement> elements) {
+        return new Repeat(this.comment, this.mode, this.bindArray, elements);
+    }
 
-        /**
-         * Sets the child pattern elements for this repeat.
-         *
-         * @param elements the child pattern elements, must not be null
-         * @return this builder for method chaining
-         */
-        public RepeatBuilder elements(List<PatternElement> elements) {
-            this.elements = List.copyOf(elements);
-            return this;
-        }
+    /**
+     * Completes the fluent construction.
+     *
+     * @return this Repeat instance
+     */
+    public Repeat build() {
+        return this;
+    }
 
-        /**
-         * Builds and returns a new Repeat instance with the configured properties.
-         *
-         * @return a new Repeat instance, never null
-         * @throws IllegalArgumentException if mode is null, bindArray is null/empty, 
-         *                                  or elements contains null values
-         */
-        public Repeat build() {
-            return new Repeat(comment, mode, bindArray, elements);
-        }
+    /**
+     * Indicates whether some other object is "equal to" this one.
+     *
+     * @param obj the reference object with which to compare
+     * @return true if this object is the same as the obj argument; false otherwise
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Repeat repeat = (Repeat) obj;
+        return Objects.equals(comment, repeat.comment) &&
+               mode == repeat.mode &&
+               Objects.equals(bindArray, repeat.bindArray) &&
+               Objects.equals(elements, repeat.elements);
+    }
+
+    /**
+     * Returns a hash code value for the object.
+     *
+     * @return a hash code value for this object
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(comment, mode, bindArray, elements);
+    }
+
+    /**
+     * Returns a string representation of this Repeat.
+     *
+     * @return a string representation of this object
+     */
+    @Override
+    public String toString() {
+        return "Repeat[" +
+               (comment != null ? "comment=" + comment + ", " : "") +
+               "mode=" + mode +
+               ", bindArray=" + bindArray +
+               ", elements=" + elements.size() + " elements" +
+               "]";
     }
 }
