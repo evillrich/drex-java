@@ -1,5 +1,7 @@
 package io.github.evillrich.drex.pattern;
 
+import java.util.Objects;
+
 /**
  * Represents a binding between a regex capture group and a JSON property.
  * <p>
@@ -12,33 +14,37 @@ package io.github.evillrich.drex.pattern;
  * <p>
  * Instances are immutable and thread-safe.
  *
- * @param property the JSON property name to bind to, never null or empty
- * @param format optional formatter function name, may be null for no formatting
  * @since 1.0
  * @see Line
  * @see Anyline
  */
-public record PropertyBinding(
-    String property,
-    String format
-) {
+public final class PropertyBinding {
+
+    private final String property;
+    private final String format;
 
     /**
      * Creates a PropertyBinding with validation and trimming.
+     *
+     * @param property the JSON property name to bind to, never null or empty
+     * @param format optional formatter function name, may be null for no formatting
+     * @throws IllegalArgumentException if property is null or empty
      */
-    public PropertyBinding {
+    public PropertyBinding(String property, String format) {
+        String fmt;
         if (property == null || property.trim().isEmpty()) {
             throw new IllegalArgumentException("property must not be null or empty");
         }
         
         // Trim the property and format strings
-        property = property.trim();
-        format = format != null ? format.trim() : null;
+        this.property = property.trim();
+        fmt = format != null ? format.trim() : null;
         
         // Convert empty format strings to null for consistency
-        if (format != null && format.isEmpty()) {
-            format = null;
+        if (fmt != null && fmt.isEmpty()) {
+            fmt = null;
         }
+        this.format = fmt;
     }
 
     /**
@@ -80,8 +86,6 @@ public record PropertyBinding(
 
     /**
      * Returns the JSON property name that captured text will be bound to.
-     * <p>
-     * This is a convenience method equivalent to accessing the {@code property} component directly.
      *
      * @return the property name, never null or empty
      */
@@ -95,8 +99,6 @@ public record PropertyBinding(
      * Formatters are used to normalize captured text into consistent string formats
      * before binding to JSON properties. Common formatters include currency(),
      * parseDate(), and trim().
-     * <p>
-     * This is a convenience method equivalent to accessing the {@code format} component directly.
      *
      * @return the formatter function name, or null if no formatting is applied
      */
@@ -122,5 +124,30 @@ public record PropertyBinding(
     public String toString() {
         return "PropertyBinding[property=" + property + 
                (format != null ? ", format=" + format : "") + "]";
+    }
+
+    /**
+     * Indicates whether some other object is "equal to" this one.
+     *
+     * @param obj the reference object with which to compare
+     * @return true if this object is the same as the obj argument; false otherwise
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        PropertyBinding that = (PropertyBinding) obj;
+        return Objects.equals(property, that.property) &&
+               Objects.equals(format, that.format);
+    }
+
+    /**
+     * Returns a hash code value for the object.
+     *
+     * @return a hash code value for this object
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(property, format);
     }
 }
