@@ -12,7 +12,7 @@ package io.github.evillrich.drex.pattern;
  * These errors should be caught during development and testing phases.
  *
  * @since 1.0
- * @see PatternElement#compile()
+ * @see PatternElement#compileElement()
  */
 public class PatternCompilationException extends RuntimeException {
 

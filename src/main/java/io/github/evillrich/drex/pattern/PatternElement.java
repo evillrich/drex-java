@@ -1,7 +1,7 @@
 package io.github.evillrich.drex.pattern;
 
 /**
- * Interface for all pattern elements in the Drex pattern hierarchy.
+ * Abstract base class for all pattern elements in the Drex pattern hierarchy.
  * <p>
  * PatternElement represents a single component in a document pattern that can be
  * used to match and extract data from text documents. All pattern elements support
@@ -12,7 +12,7 @@ package io.github.evillrich.drex.pattern;
  * @since 1.0
  * @see PatternVisitor
  */
-public interface PatternElement {
+public abstract class PatternElement {
 
     /**
      * Returns the optional comment associated with this pattern element.
@@ -21,7 +21,7 @@ public interface PatternElement {
      *
      * @return the comment string, or null if no comment was provided
      */
-    String getComment();
+    public abstract String getComment();
 
     /**
      * Compiles this pattern element for efficient matching.
@@ -37,7 +37,7 @@ public interface PatternElement {
      * @throws PatternCompilationException if the pattern cannot be compiled (unchecked)
      * @throws IllegalStateException if the pattern is in an invalid state for compilation
      */
-    void compile();
+    protected abstract void compileElement();
 
     /**
      * Accepts a visitor for processing this pattern element.
@@ -50,5 +50,5 @@ public interface PatternElement {
      * @return the result of the visitor operation
      * @throws IllegalArgumentException if visitor is null
      */
-    <T> T accept(PatternVisitor<T> visitor);
+    public abstract <T> T accept(PatternVisitor<T> visitor);
 }

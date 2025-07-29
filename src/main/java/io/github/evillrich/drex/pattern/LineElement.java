@@ -1,7 +1,7 @@
 package io.github.evillrich.drex.pattern;
 
 /**
- * Interface for pattern elements that match individual text lines.
+ * Abstract base class for pattern elements that match individual text lines.
  * <p>
  * LineElement represents terminal pattern elements that process single lines
  * of text input. This includes Line elements that match regex patterns and
@@ -17,7 +17,7 @@ package io.github.evillrich.drex.pattern;
  * @see Line
  * @see Anyline
  */
-public interface LineElement extends PatternElement {
+public abstract class LineElement extends PatternElement {
 
     /**
      * Attempts to match the specified input line against this line element's pattern.
@@ -34,5 +34,5 @@ public interface LineElement extends PatternElement {
      * @throws IllegalArgumentException if inputLine is null
      * @throws IllegalStateException if the pattern has not been compiled
      */
-    LineMatchResult match(String inputLine);
+    public abstract LineMatchResult match(String inputLine);
 }

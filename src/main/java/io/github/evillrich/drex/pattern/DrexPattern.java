@@ -17,7 +17,7 @@ import java.util.Objects;
  * @since 1.0
  * @see PatternElement
  */
-public final class DrexPattern implements GroupingPatternElement {
+public final class DrexPattern extends GroupingPatternElement {
 
     private final String version;
     private final String name;
@@ -219,10 +219,27 @@ public final class DrexPattern implements GroupingPatternElement {
      * This method delegates to each child element's compile method, ensuring
      * that all Line elements have their regex patterns compiled.
      */
-    public void compile() {
+    @Override
+    protected void compileElement() {
         for (PatternElement element : elements) {
-            element.compile();
+            element.compileElement();
         }
+    }
+
+    /**
+     * Compiles the specified pattern for efficient matching.
+     * <p>
+     * This public static method compiles a DrexPattern and all its child elements,
+     * preparing them for matching operations. This is the preferred way to compile
+     * patterns from client code.
+     *
+     * @param pattern the pattern to compile, must not be null
+     * @throws IllegalArgumentException if pattern is null
+     * @throws PatternCompilationException if the pattern cannot be compiled
+     */
+    public void compile() {
+        this.compileElement();
+        nfa = NFA.fromPattern(this);
     }
 
     /**

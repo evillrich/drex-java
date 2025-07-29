@@ -23,7 +23,7 @@ import java.util.Objects;
  * @since 1.0
  * @see CompositePatternElement
  */
-public final class Or implements CompositePatternElement {
+public final class Or extends CompositePatternElement {
 
     private final String comment;
     private final List<PatternElement> elements;
