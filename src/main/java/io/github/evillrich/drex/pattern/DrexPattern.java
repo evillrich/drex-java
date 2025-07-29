@@ -1,6 +1,7 @@
 package io.github.evillrich.drex.pattern;
 
-import java.util.ArrayList;
+import io.github.evillrich.drex.engine.NFA;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -13,28 +14,32 @@ import java.util.Objects;
  * <p>
  * DrexPattern instances are immutable and thread-safe once constructed.
  *
- * @param version the pattern version string, never null or empty
- * @param name the pattern name, never null or empty
- * @param comment optional descriptive comment, may be null
- * @param bindObject the name of the root JSON object, never null or empty
- * @param editDistance the maximum edit distance for fuzzy matching, never negative
- * @param elements the child pattern elements, never null but may be empty
  * @since 1.0
  * @see PatternElement
  */
-public record DrexPattern(
-    String version,
-    String name,
-    String comment,
-    String bindObject,
-    int editDistance,
-    List<PatternElement> elements
-) implements GroupingPatternElement {
+public final class DrexPattern implements GroupingPatternElement {
+
+    private final String version;
+    private final String name;
+    private final String comment;
+    private final String bindObject;
+    private final int editDistance;
+    private final List<PatternElement> elements;
+    private NFA nfa;
 
     /**
-     * Creates a DrexPattern record with validation and immutable list creation.
+     * Creates a DrexPattern with validation and immutable list creation.
+     *
+     * @param version the pattern version string, never null or empty
+     * @param name the pattern name, never null or empty
+     * @param comment optional descriptive comment, may be null
+     * @param bindObject the name of the root JSON object, never null or empty
+     * @param editDistance the maximum edit distance for fuzzy matching, never negative
+     * @param elements the child pattern elements, never null but may be empty
+     * @throws IllegalArgumentException if validation fails
      */
-    public DrexPattern {
+    public DrexPattern(String version, String name, String comment, String bindObject, 
+                       int editDistance, List<PatternElement> elements) {
         if (version == null || version.trim().isEmpty()) {
             throw new IllegalArgumentException("version must not be null or empty");
         }
@@ -57,10 +62,12 @@ public record DrexPattern(
         }
         
         // Trim strings and create immutable list
-        version = version.trim();
-        name = name.trim();
-        bindObject = bindObject.trim();
-        elements = List.copyOf(elements);
+        this.version = version.trim();
+        this.name = name.trim();
+        this.comment = comment;
+        this.bindObject = bindObject.trim();
+        this.editDistance = editDistance;
+        this.elements = List.copyOf(elements);
     }
 
     /**
@@ -72,12 +79,65 @@ public record DrexPattern(
      * @param bindObject the name of the root JSON object, must not be null or empty
      * @param editDistance the maximum edit distance for fuzzy matching, must be non-negative
      * @param elements the child pattern elements, must not be null but may be empty
-     * @throws IllegalArgumentException if version, name, or bindObject are null/empty,
-     *                                  if editDistance is negative, or if elements contains null values
+     * @throws IllegalArgumentException if validation fails
      */
     public DrexPattern(String version, String name, String comment, String bindObject, 
                        int editDistance, PatternElement... elements) {
         this(version, name, comment, bindObject, editDistance, List.of(elements));
+    }
+
+    /**
+     * Returns the pattern version string.
+     *
+     * @return the version string, never null or empty
+     */
+    public String version() {
+        return version;
+    }
+
+    /**
+     * Returns the pattern name.
+     *
+     * @return the pattern name, never null or empty
+     */
+    public String name() {
+        return name;
+    }
+
+    /**
+     * Returns the optional comment.
+     *
+     * @return the comment string, or null if no comment was provided
+     */
+    public String comment() {
+        return comment;
+    }
+
+    /**
+     * Returns the name of the root JSON object.
+     *
+     * @return the object binding name, never null or empty
+     */
+    public String bindObject() {
+        return bindObject;
+    }
+
+    /**
+     * Returns the maximum edit distance for fuzzy matching.
+     *
+     * @return the edit distance, zero or greater
+     */
+    public int editDistance() {
+        return editDistance;
+    }
+
+    /**
+     * Returns the child pattern elements.
+     *
+     * @return an immutable list of child elements, never null but may be empty
+     */
+    public List<PatternElement> elements() {
+        return elements;
     }
 
     /**
@@ -97,8 +157,6 @@ public record DrexPattern(
 
     /**
      * Returns an immutable list of child pattern elements.
-     * <p>
-     * This is a convenience method equivalent to accessing the {@code elements} component directly.
      *
      * @return an unmodifiable list of child elements, never null but may be empty
      */
@@ -109,8 +167,6 @@ public record DrexPattern(
 
     /**
      * Returns the name of the JSON object that this element creates.
-     * <p>
-     * This is a convenience method equivalent to accessing the {@code bindObject} component directly.
      *
      * @return the object binding name, never null or empty
      */
@@ -121,8 +177,6 @@ public record DrexPattern(
 
     /**
      * Returns the optional comment associated with this pattern element.
-     * <p>
-     * This is a convenience method equivalent to accessing the {@code comment} component directly.
      *
      * @return the comment string, or null if no comment was provided
      */
@@ -133,8 +187,6 @@ public record DrexPattern(
 
     /**
      * Returns the version string of this pattern.
-     * <p>
-     * This is a convenience method equivalent to accessing the {@code version} component directly.
      *
      * @return the version string, never null or empty
      */
@@ -144,8 +196,6 @@ public record DrexPattern(
 
     /**
      * Returns the name of this pattern.
-     * <p>
-     * This is a convenience method equivalent to accessing the {@code name} component directly.
      *
      * @return the pattern name, never null or empty
      */
@@ -155,8 +205,6 @@ public record DrexPattern(
 
     /**
      * Returns the maximum edit distance allowed for fuzzy matching.
-     * <p>
-     * This is a convenience method equivalent to accessing the {@code editDistance} component directly.
      *
      * @return the edit distance, zero or greater
      */
@@ -178,132 +226,136 @@ public record DrexPattern(
     }
 
     /**
-     * Creates a new DrexPatternBuilder for fluent construction of DrexPattern instances.
+     * Creates a builder-style pattern construction (backward compatibility).
      *
-     * @return a new DrexPatternBuilder instance, never null
+     * @return a new DrexPattern instance for fluent construction
      */
-    public static DrexPatternBuilder builder() {
-        return new DrexPatternBuilder();
+    public static DrexPattern builder() {
+        return new DrexPattern("", "", null, "", 0, List.of());
     }
 
     /**
-     * A fluent builder for constructing DrexPattern instances.
-     * <p>
-     * This builder provides a fluent interface for creating DrexPattern instances
-     * with validation and type safety. The builder is mutable during construction
-     * but produces immutable DrexPattern records.
-     * <p>
-     * Example usage:
-     * <pre>{@code
-     * DrexPattern pattern = DrexPattern.builder()
-     *     .version("1.0")
-     *     .name("InvoicePattern")
-     *     .comment("Extract basic invoice information")
-     *     .bindObject("invoice")
-     *     .editDistance(0)
-     *     .elements(
-     *         Line.builder().regex("Header (.*)").bindProperties(PropertyBinding.of("header")).build(),
-     *         Group.builder().bindObject("details").elements(
-     *             Line.builder().regex("Invoice #(\\d+)").bindProperties(PropertyBinding.of("id")).build()
-     *         ).build()
-     *     )
-     *     .build();
-     * }</pre>
+     * Sets the version for this pattern.
+     *
+     * @param version the pattern version string, must not be null or empty
+     * @return a new DrexPattern instance for method chaining
      */
-    public static class DrexPatternBuilder {
-        private String version;
-        private String name;
-        private String comment;
-        private String bindObject;
-        private int editDistance = 0;
-        private List<PatternElement> elements = new ArrayList<>();
+    public DrexPattern version(String version) {
+        return new DrexPattern(version, this.name, this.comment, this.bindObject, this.editDistance, this.elements);
+    }
 
-        /**
-         * Sets the version for this pattern.
-         *
-         * @param version the pattern version string, must not be null or empty
-         * @return this builder for method chaining
-         */
-        public DrexPatternBuilder version(String version) {
-            this.version = version;
-            return this;
-        }
+    /**
+     * Sets the name for this pattern.
+     *
+     * @param name the pattern name, must not be null or empty
+     * @return a new DrexPattern instance for method chaining
+     */
+    public DrexPattern name(String name) {
+        return new DrexPattern(this.version, name, this.comment, this.bindObject, this.editDistance, this.elements);
+    }
 
-        /**
-         * Sets the name for this pattern.
-         *
-         * @param name the pattern name, must not be null or empty
-         * @return this builder for method chaining
-         */
-        public DrexPatternBuilder name(String name) {
-            this.name = name;
-            return this;
-        }
+    /**
+     * Sets the comment for this pattern.
+     *
+     * @param comment optional descriptive comment, may be null
+     * @return a new DrexPattern instance for method chaining
+     */
+    public DrexPattern comment(String comment) {
+        return new DrexPattern(this.version, this.name, comment, this.bindObject, this.editDistance, this.elements);
+    }
 
-        /**
-         * Sets the comment for this pattern.
-         *
-         * @param comment optional descriptive comment, may be null
-         * @return this builder for method chaining
-         */
-        public DrexPatternBuilder comment(String comment) {
-            this.comment = comment;
-            return this;
-        }
+    /**
+     * Sets the name of the root JSON object that this pattern creates.
+     *
+     * @param bindObject the name of the root JSON object, must not be null or empty
+     * @return a new DrexPattern instance for method chaining
+     */
+    public DrexPattern bindObject(String bindObject) {
+        return new DrexPattern(this.version, this.name, this.comment, bindObject, this.editDistance, this.elements);
+    }
 
-        /**
-         * Sets the name of the root JSON object that this pattern creates.
-         *
-         * @param bindObject the name of the root JSON object, must not be null or empty
-         * @return this builder for method chaining
-         */
-        public DrexPatternBuilder bindObject(String bindObject) {
-            this.bindObject = bindObject;
-            return this;
-        }
+    /**
+     * Sets the maximum edit distance for fuzzy matching.
+     *
+     * @param editDistance the maximum edit distance for fuzzy matching, must be non-negative
+     * @return a new DrexPattern instance for method chaining
+     */
+    public DrexPattern editDistance(int editDistance) {
+        return new DrexPattern(this.version, this.name, this.comment, this.bindObject, editDistance, this.elements);
+    }
 
-        /**
-         * Sets the maximum edit distance for fuzzy matching.
-         *
-         * @param editDistance the maximum edit distance for fuzzy matching, must be non-negative
-         * @return this builder for method chaining
-         */
-        public DrexPatternBuilder editDistance(int editDistance) {
-            this.editDistance = editDistance;
-            return this;
-        }
+    /**
+     * Sets the child pattern elements for this pattern.
+     *
+     * @param elements the child pattern elements, must not be null
+     * @return a new DrexPattern instance for method chaining
+     */
+    public DrexPattern elements(PatternElement... elements) {
+        return new DrexPattern(this.version, this.name, this.comment, this.bindObject, this.editDistance, List.of(elements));
+    }
 
-        /**
-         * Sets the child pattern elements for this pattern.
-         *
-         * @param elements the child pattern elements, must not be null
-         * @return this builder for method chaining
-         */
-        public DrexPatternBuilder elements(PatternElement... elements) {
-            this.elements = List.of(elements);
-            return this;
-        }
+    /**
+     * Sets the child pattern elements for this pattern.
+     *
+     * @param elements the child pattern elements, must not be null
+     * @return a new DrexPattern instance for method chaining
+     */
+    public DrexPattern elements(List<PatternElement> elements) {
+        return new DrexPattern(this.version, this.name, this.comment, this.bindObject, this.editDistance, elements);
+    }
 
-        /**
-         * Sets the child pattern elements for this pattern.
-         *
-         * @param elements the child pattern elements, must not be null
-         * @return this builder for method chaining
-         */
-        public DrexPatternBuilder elements(List<PatternElement> elements) {
-            this.elements = List.copyOf(elements);
-            return this;
-        }
+    /**
+     * Completes the fluent construction.
+     *
+     * @return this DrexPattern instance
+     */
+    public DrexPattern build() {
+        return this;
+    }
 
-        /**
-         * Builds and returns a new DrexPattern instance with the configured properties.
-         *
-         * @return a new DrexPattern instance, never null
-         * @throws IllegalArgumentException if version, name, or bindObject are null/empty,
-         *                                  if editDistance is negative, or if elements contains null values
-         */
-        public DrexPattern build() {
-            return new DrexPattern(version, name, comment, bindObject, editDistance, elements);
-        }
+    /**
+     * Indicates whether some other object is "equal to" this one.
+     *
+     * @param obj the reference object with which to compare
+     * @return true if this object is the same as the obj argument; false otherwise
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        DrexPattern that = (DrexPattern) obj;
+        return editDistance == that.editDistance &&
+               Objects.equals(version, that.version) &&
+               Objects.equals(name, that.name) &&
+               Objects.equals(comment, that.comment) &&
+               Objects.equals(bindObject, that.bindObject) &&
+               Objects.equals(elements, that.elements);
+    }
+
+    /**
+     * Returns a hash code value for the object.
+     *
+     * @return a hash code value for this object
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(version, name, comment, bindObject, editDistance, elements);
+    }
+
+    /**
+     * Returns a string representation of this DrexPattern.
+     *
+     * @return a string representation of this object
+     */
+    @Override
+    public String toString() {
+        return "DrexPattern[" +
+               "version=" + version +
+               ", name=" + name +
+               (comment != null ? ", comment=" + comment : "") +
+               ", bindObject=" + bindObject +
+               ", editDistance=" + editDistance +
+               ", elements=" + elements.size() + " elements" +
+               "]";
     }
 }
