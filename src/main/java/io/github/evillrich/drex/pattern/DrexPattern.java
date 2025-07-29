@@ -1,5 +1,6 @@
 package io.github.evillrich.drex.pattern;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -60,7 +61,7 @@ public record DrexPattern(
         version = version.trim();
         name = name.trim();
         bindObject = bindObject.trim();
-        elements = Collections.unmodifiableList(List.copyOf(elements));
+        elements = List.copyOf(elements);
     }
 
     /**
@@ -162,5 +163,148 @@ public record DrexPattern(
      */
     public int getEditDistance() {
         return editDistance;
+    }
+
+    /**
+     * Compiles all pattern elements contained in this DrexPattern to ensure
+     * all regex patterns are valid and ready for matching.
+     * <p>
+     * This method delegates to each child element's compile method, ensuring
+     * that all Line elements have their regex patterns compiled.
+     */
+    public void compile() {
+        for (PatternElement element : elements) {
+            element.compile();
+        }
+    }
+
+    /**
+     * Creates a new DrexPatternBuilder for fluent construction of DrexPattern instances.
+     *
+     * @return a new DrexPatternBuilder instance, never null
+     */
+    public static DrexPatternBuilder builder() {
+        return new DrexPatternBuilder();
+    }
+
+    /**
+     * A fluent builder for constructing DrexPattern instances.
+     * <p>
+     * This builder provides a fluent interface for creating DrexPattern instances
+     * with validation and type safety. The builder is mutable during construction
+     * but produces immutable DrexPattern records.
+     * <p>
+     * Example usage:
+     * <pre>{@code
+     * DrexPattern pattern = DrexPattern.builder()
+     *     .version("1.0")
+     *     .name("InvoicePattern")
+     *     .comment("Extract basic invoice information")
+     *     .bindObject("invoice")
+     *     .editDistance(0)
+     *     .elements(
+     *         Line.builder().regex("Header (.*)").bindProperties(PropertyBinding.of("header")).build(),
+     *         Group.builder().bindObject("details").elements(
+     *             Line.builder().regex("Invoice #(\\d+)").bindProperties(PropertyBinding.of("id")).build()
+     *         ).build()
+     *     )
+     *     .build();
+     * }</pre>
+     */
+    public static class DrexPatternBuilder {
+        private String version;
+        private String name;
+        private String comment;
+        private String bindObject;
+        private int editDistance = 0;
+        private List<PatternElement> elements = new ArrayList<>();
+
+        /**
+         * Sets the version for this pattern.
+         *
+         * @param version the pattern version string, must not be null or empty
+         * @return this builder for method chaining
+         */
+        public DrexPatternBuilder version(String version) {
+            this.version = version;
+            return this;
+        }
+
+        /**
+         * Sets the name for this pattern.
+         *
+         * @param name the pattern name, must not be null or empty
+         * @return this builder for method chaining
+         */
+        public DrexPatternBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        /**
+         * Sets the comment for this pattern.
+         *
+         * @param comment optional descriptive comment, may be null
+         * @return this builder for method chaining
+         */
+        public DrexPatternBuilder comment(String comment) {
+            this.comment = comment;
+            return this;
+        }
+
+        /**
+         * Sets the name of the root JSON object that this pattern creates.
+         *
+         * @param bindObject the name of the root JSON object, must not be null or empty
+         * @return this builder for method chaining
+         */
+        public DrexPatternBuilder bindObject(String bindObject) {
+            this.bindObject = bindObject;
+            return this;
+        }
+
+        /**
+         * Sets the maximum edit distance for fuzzy matching.
+         *
+         * @param editDistance the maximum edit distance for fuzzy matching, must be non-negative
+         * @return this builder for method chaining
+         */
+        public DrexPatternBuilder editDistance(int editDistance) {
+            this.editDistance = editDistance;
+            return this;
+        }
+
+        /**
+         * Sets the child pattern elements for this pattern.
+         *
+         * @param elements the child pattern elements, must not be null
+         * @return this builder for method chaining
+         */
+        public DrexPatternBuilder elements(PatternElement... elements) {
+            this.elements = List.of(elements);
+            return this;
+        }
+
+        /**
+         * Sets the child pattern elements for this pattern.
+         *
+         * @param elements the child pattern elements, must not be null
+         * @return this builder for method chaining
+         */
+        public DrexPatternBuilder elements(List<PatternElement> elements) {
+            this.elements = List.copyOf(elements);
+            return this;
+        }
+
+        /**
+         * Builds and returns a new DrexPattern instance with the configured properties.
+         *
+         * @return a new DrexPattern instance, never null
+         * @throws IllegalArgumentException if version, name, or bindObject are null/empty,
+         *                                  if editDistance is negative, or if elements contains null values
+         */
+        public DrexPattern build() {
+            return new DrexPattern(version, name, comment, bindObject, editDistance, elements);
+        }
     }
 }

@@ -1,5 +1,6 @@
 package io.github.evillrich.drex.pattern;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -127,7 +128,7 @@ public record Repeat(
         
         // Trim bindArray and create immutable list
         bindArray = bindArray.trim();
-        elements = Collections.unmodifiableList(List.copyOf(elements));
+        elements = List.copyOf(elements);
     }
 
     /**
@@ -212,5 +213,110 @@ public record Repeat(
     @Override
     public String getComment() {
         return comment;
+    }
+
+    /**
+     * Creates a new RepeatBuilder for fluent construction of Repeat instances.
+     *
+     * @return a new RepeatBuilder instance, never null
+     */
+    public static RepeatBuilder builder() {
+        return new RepeatBuilder();
+    }
+
+    /**
+     * A fluent builder for constructing Repeat instances.
+     * <p>
+     * This builder provides a fluent interface for creating Repeat pattern elements
+     * with validation and type safety. The builder is mutable during construction
+     * but produces immutable Repeat records.
+     * <p>
+     * Example usage:
+     * <pre>{@code
+     * Repeat repeat = Repeat.builder()
+     *     .comment("Process line items")
+     *     .mode(Repeat.Mode.ONE_OR_MORE)
+     *     .bindArray("items")
+     *     .elements(
+     *         Line.builder().regex("(.+)\\s+(\\d+)\\s+([\\d.]+)").bindProperties(
+     *             PropertyBinding.of("name"),
+     *             PropertyBinding.of("quantity"),
+     *             PropertyBinding.of("price")
+     *         ).build()
+     *     )
+     *     .build();
+     * }</pre>
+     */
+    public static class RepeatBuilder {
+        private String comment;
+        private Mode mode;
+        private String bindArray;
+        private List<PatternElement> elements = new ArrayList<>();
+
+        /**
+         * Sets the comment for this repeat pattern.
+         *
+         * @param comment optional descriptive comment, may be null
+         * @return this builder for method chaining
+         */
+        public RepeatBuilder comment(String comment) {
+            this.comment = comment;
+            return this;
+        }
+
+        /**
+         * Sets the repeat mode that determines matching behavior.
+         *
+         * @param mode the repeat mode determining matching behavior, must not be null
+         * @return this builder for method chaining
+         */
+        public RepeatBuilder mode(Mode mode) {
+            this.mode = mode;
+            return this;
+        }
+
+        /**
+         * Sets the name of the JSON array that will contain the matched elements.
+         *
+         * @param bindArray the name of the JSON array to create, must not be null or empty
+         * @return this builder for method chaining
+         */
+        public RepeatBuilder bindArray(String bindArray) {
+            this.bindArray = bindArray;
+            return this;
+        }
+
+        /**
+         * Sets the child pattern elements for this repeat.
+         *
+         * @param elements the child pattern elements, must not be null
+         * @return this builder for method chaining
+         */
+        public RepeatBuilder elements(PatternElement... elements) {
+            this.elements = List.of(elements);
+            return this;
+        }
+
+        /**
+         * Sets the child pattern elements for this repeat.
+         *
+         * @param elements the child pattern elements, must not be null
+         * @return this builder for method chaining
+         */
+        public RepeatBuilder elements(List<PatternElement> elements) {
+            this.elements = List.copyOf(elements);
+            return this;
+        }
+
+        /**
+         * Builds and returns a new Repeat instance with the configured properties.
+         *
+         * @return a new Repeat instance, never null
+         * @throws IllegalArgumentException if mode is null, bindArray is null/empty, 
+         *                                  or elements contains null values
+         */
+        public Repeat build() {
+            return new Repeat(comment, mode, bindArray, elements);
+        }
     }
 }

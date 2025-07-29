@@ -1,7 +1,6 @@
 package io.github.evillrich.drex.pattern;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -55,7 +54,7 @@ public record Line(
         
         // Trim regex and create immutable list
         regex = regex.trim();
-        bindProperties = Collections.unmodifiableList(List.copyOf(bindProperties));
+        bindProperties = List.copyOf(bindProperties);
         
         // Compile the regex pattern during construction
         try {
@@ -197,5 +196,91 @@ public record Line(
     @Override
     public String getComment() {
         return comment;
+    }
+
+    /**
+     * Creates a new LineBuilder for fluent construction of Line instances.
+     *
+     * @return a new LineBuilder instance, never null
+     */
+    public static LineBuilder builder() {
+        return new LineBuilder();
+    }
+
+    /**
+     * A fluent builder for constructing Line instances.
+     * <p>
+     * This builder provides a fluent interface for creating Line pattern elements
+     * with validation and type safety. The builder is mutable during construction
+     * but produces immutable Line records.
+     * <p>
+     * Example usage:
+     * <pre>{@code
+     * Line line = Line.builder()
+     *     .comment("Extract invoice number")
+     *     .regex("Invoice #(\\d+)")
+     *     .bindProperties(PropertyBinding.of("invoiceNumber"))
+     *     .build();
+     * }</pre>
+     */
+    public static class LineBuilder {
+        private String comment;
+        private String regex;
+        private List<PropertyBinding> bindProperties = new ArrayList<>();
+
+        /**
+         * Sets the comment for this line pattern.
+         *
+         * @param comment optional descriptive comment, may be null
+         * @return this builder for method chaining
+         */
+        public LineBuilder comment(String comment) {
+            this.comment = comment;
+            return this;
+        }
+
+        /**
+         * Sets the regular expression pattern for this line.
+         *
+         * @param regex the regular expression pattern to match, must not be null or empty
+         * @return this builder for method chaining
+         */
+        public LineBuilder regex(String regex) {
+            this.regex = regex;
+            return this;
+        }
+
+        /**
+         * Sets the property bindings for captured groups.
+         *
+         * @param bindings the property bindings for captured groups, must not be null
+         * @return this builder for method chaining
+         */
+        public LineBuilder bindProperties(PropertyBinding... bindings) {
+            this.bindProperties = List.of(bindings);
+            return this;
+        }
+
+        /**
+         * Sets the property bindings for captured groups.
+         *
+         * @param bindings the property bindings for captured groups, must not be null
+         * @return this builder for method chaining
+         */
+        public LineBuilder bindProperties(List<PropertyBinding> bindings) {
+            this.bindProperties = List.copyOf(bindings);
+            return this;
+        }
+
+        /**
+         * Builds and returns a new Line instance with the configured properties.
+         *
+         * @return a new Line instance, never null
+         * @throws IllegalArgumentException if regex is null/empty, or if bindProperties contains null values
+         * @throws PatternCompilationException if the regex pattern is invalid
+         */
+        public Line build() {
+            return new Line(comment, regex, bindProperties);
+        }
     }
 }

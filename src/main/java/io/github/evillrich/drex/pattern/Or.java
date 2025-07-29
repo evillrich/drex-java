@@ -1,6 +1,6 @@
 package io.github.evillrich.drex.pattern;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -49,7 +49,7 @@ public record Or(
         }
         
         // Create immutable list
-        elements = Collections.unmodifiableList(List.copyOf(elements));
+        elements = List.copyOf(elements);
     }
 
     /**
@@ -112,5 +112,81 @@ public record Or(
     @Override
     public String getComment() {
         return comment;
+    }
+
+    /**
+     * Creates a new OrBuilder for fluent construction of Or instances.
+     *
+     * @return a new OrBuilder instance, never null
+     */
+    public static OrBuilder builder() {
+        return new OrBuilder();
+    }
+
+    /**
+     * A fluent builder for constructing Or instances.
+     * <p>
+     * This builder provides a fluent interface for creating Or pattern elements
+     * with validation and type safety. The builder is mutable during construction
+     * but produces immutable Or records.
+     * <p>
+     * Example usage:
+     * <pre>{@code
+     * Or or = Or.builder()
+     *     .comment("Handle different total formats")
+     *     .elements(
+     *         Line.builder().regex("Total: \\$([\\d,]+\\.\\d{2})").bindProperties(PropertyBinding.of("total")).build(),
+     *         Line.builder().regex("Amount Due: \\$([\\d,]+\\.\\d{2})").bindProperties(PropertyBinding.of("total")).build(),
+     *         Line.builder().regex("Final Total: ([\\d,]+\\.\\d{2})").bindProperties(PropertyBinding.of("total")).build()
+     *     )
+     *     .build();
+     * }</pre>
+     */
+    public static class OrBuilder {
+        private String comment;
+        private List<PatternElement> elements = new ArrayList<>();
+
+        /**
+         * Sets the comment for this or pattern.
+         *
+         * @param comment optional descriptive comment, may be null
+         * @return this builder for method chaining
+         */
+        public OrBuilder comment(String comment) {
+            this.comment = comment;
+            return this;
+        }
+
+        /**
+         * Sets the alternative pattern elements.
+         *
+         * @param elements the alternative pattern elements, must not be null and should contain at least one element
+         * @return this builder for method chaining
+         */
+        public OrBuilder elements(PatternElement... elements) {
+            this.elements = List.of(elements);
+            return this;
+        }
+
+        /**
+         * Sets the alternative pattern elements.
+         *
+         * @param elements the alternative pattern elements, must not be null and should contain at least one element
+         * @return this builder for method chaining
+         */
+        public OrBuilder elements(List<PatternElement> elements) {
+            this.elements = List.copyOf(elements);
+            return this;
+        }
+
+        /**
+         * Builds and returns a new Or instance with the configured properties.
+         *
+         * @return a new Or instance, never null
+         * @throws IllegalArgumentException if elements is null or contains null values
+         */
+        public Or build() {
+            return new Or(comment, elements);
+        }
     }
 }

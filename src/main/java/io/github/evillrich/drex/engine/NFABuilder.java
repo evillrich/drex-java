@@ -1,7 +1,6 @@
 package io.github.evillrich.drex.engine;
 import io.github.evillrich.drex.pattern.*;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -133,7 +132,7 @@ public class NFABuilder implements PatternVisitor<NFA> {
             throw new IllegalStateException("Repeat element must have child elements");
         }
         
-        PatternElement childElement = repeat.getElements().get(0);
+        PatternElement childElement = repeat.getElements().getFirst();
         NFA childNFA = childElement.accept(this);
         
         return switch (repeat.getMode()) {

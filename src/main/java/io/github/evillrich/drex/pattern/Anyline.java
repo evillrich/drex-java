@@ -1,5 +1,6 @@
 package io.github.evillrich.drex.pattern;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -50,7 +51,7 @@ public record Anyline(
         }
         
         // Create immutable list
-        bindProperties = Collections.unmodifiableList(List.copyOf(bindProperties));
+        bindProperties = List.copyOf(bindProperties);
     }
 
     /**
@@ -140,5 +141,82 @@ public record Anyline(
     @Override
     public String getComment() {
         return comment;
+    }
+
+    /**
+     * Creates a new AnylineBuilder for fluent construction of Anyline instances.
+     *
+     * @return a new AnylineBuilder instance, never null
+     */
+    public static AnylineBuilder builder() {
+        return new AnylineBuilder();
+    }
+
+    /**
+     * A fluent builder for constructing Anyline instances.
+     * <p>
+     * This builder provides a fluent interface for creating Anyline pattern elements
+     * with validation and type safety. The builder is mutable during construction
+     * but produces immutable Anyline records.
+     * <p>
+     * Example usage:
+     * <pre>{@code
+     * Anyline anyline = Anyline.builder()
+     *     .comment("Skip blank or unknown lines")
+     *     .build();
+     * 
+     * // With binding (rare case)
+     * Anyline withBinding = Anyline.builder()
+     *     .comment("Capture unknown content")
+     *     .bindProperties(PropertyBinding.of("skippedContent"))
+     *     .build();
+     * }</pre>
+     */
+    public static class AnylineBuilder {
+        private String comment;
+        private List<PropertyBinding> bindProperties = new ArrayList<>();
+
+        /**
+         * Sets the comment for this anyline pattern.
+         *
+         * @param comment optional descriptive comment, may be null
+         * @return this builder for method chaining
+         */
+        public AnylineBuilder comment(String comment) {
+            this.comment = comment;
+            return this;
+        }
+
+        /**
+         * Sets the property bindings for the matched line.
+         *
+         * @param bindings the property bindings for the matched line, must not be null
+         * @return this builder for method chaining
+         */
+        public AnylineBuilder bindProperties(PropertyBinding... bindings) {
+            this.bindProperties = List.of(bindings);
+            return this;
+        }
+
+        /**
+         * Sets the property bindings for the matched line.
+         *
+         * @param bindings the property bindings for the matched line, must not be null
+         * @return this builder for method chaining
+         */
+        public AnylineBuilder bindProperties(List<PropertyBinding> bindings) {
+            this.bindProperties = List.copyOf(bindings);
+            return this;
+        }
+
+        /**
+         * Builds and returns a new Anyline instance with the configured properties.
+         *
+         * @return a new Anyline instance, never null
+         * @throws IllegalArgumentException if bindProperties contains null values
+         */
+        public Anyline build() {
+            return new Anyline(comment, bindProperties);
+        }
     }
 }

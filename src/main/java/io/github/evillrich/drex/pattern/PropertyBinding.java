@@ -1,7 +1,5 @@
 package io.github.evillrich.drex.pattern;
 
-import java.util.Objects;
-
 /**
  * Represents a binding between a regex capture group and a JSON property.
  * <p>

@@ -1,6 +1,6 @@
 package io.github.evillrich.drex.pattern;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -47,7 +47,7 @@ public record Group(
         
         // Trim bindObject and create immutable list
         bindObject = bindObject.trim();
-        elements = Collections.unmodifiableList(List.copyOf(elements));
+        elements = List.copyOf(elements);
     }
 
     /**
@@ -102,5 +102,93 @@ public record Group(
     @Override
     public String getComment() {
         return comment;
+    }
+
+    /**
+     * Creates a new GroupBuilder for fluent construction of Group instances.
+     *
+     * @return a new GroupBuilder instance, never null
+     */
+    public static GroupBuilder builder() {
+        return new GroupBuilder();
+    }
+
+    /**
+     * A fluent builder for constructing Group instances.
+     * <p>
+     * This builder provides a fluent interface for creating Group pattern elements
+     * with validation and type safety. The builder is mutable during construction
+     * but produces immutable Group records.
+     * <p>
+     * Example usage:
+     * <pre>{@code
+     * Group group = Group.builder()
+     *     .comment("Customer information section")
+     *     .bindObject("customer")
+     *     .elements(
+     *         Line.builder().regex("Name: (.+)").bindProperties(PropertyBinding.of("name")).build(),
+     *         Line.builder().regex("Address: (.+)").bindProperties(PropertyBinding.of("address")).build()
+     *     )
+     *     .build();
+     * }</pre>
+     */
+    public static class GroupBuilder {
+        private String comment;
+        private String bindObject;
+        private List<PatternElement> elements = new ArrayList<>();
+
+        /**
+         * Sets the comment for this group pattern.
+         *
+         * @param comment optional descriptive comment, may be null
+         * @return this builder for method chaining
+         */
+        public GroupBuilder comment(String comment) {
+            this.comment = comment;
+            return this;
+        }
+
+        /**
+         * Sets the name of the JSON object that this group creates.
+         *
+         * @param bindObject the name of the JSON object to create, must not be null or empty
+         * @return this builder for method chaining
+         */
+        public GroupBuilder bindObject(String bindObject) {
+            this.bindObject = bindObject;
+            return this;
+        }
+
+        /**
+         * Sets the child pattern elements for this group.
+         *
+         * @param elements the child pattern elements, must not be null
+         * @return this builder for method chaining
+         */
+        public GroupBuilder elements(PatternElement... elements) {
+            this.elements = List.of(elements);
+            return this;
+        }
+
+        /**
+         * Sets the child pattern elements for this group.
+         *
+         * @param elements the child pattern elements, must not be null
+         * @return this builder for method chaining
+         */
+        public GroupBuilder elements(List<PatternElement> elements) {
+            this.elements = List.copyOf(elements);
+            return this;
+        }
+
+        /**
+         * Builds and returns a new Group instance with the configured properties.
+         *
+         * @return a new Group instance, never null
+         * @throws IllegalArgumentException if bindObject is null/empty or if elements contains null values
+         */
+        public Group build() {
+            return new Group(comment, bindObject, elements);
+        }
     }
 }
