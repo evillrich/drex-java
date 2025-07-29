@@ -1,7 +1,6 @@
 package io.github.evillrich.drex.pattern;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -23,33 +22,25 @@ import java.util.regex.PatternSyntaxException;
  * <p>
  * Instances are immutable and thread-safe.
  *
+ * @param comment optional descriptive comment, may be null
+ * @param regex the regular expression pattern to match, never null or empty
+ * @param bindProperties the property bindings for captured groups, never null but may be empty
+ * @param compiledPattern the compiled regex pattern, never null
  * @since 1.0
  * @see LineElement
  * @see PropertyBinding
- * @see Builder
  */
-public final class Line extends LineElement {
-
-    private final String regex;
-    private final List<PropertyBinding> bindProperties;
-    private volatile Pattern compiledPattern;
-    private volatile boolean compiled = false;
+public record Line(
+    String comment,
+    String regex,
+    List<PropertyBinding> bindProperties,
+    Pattern compiledPattern
+) implements LineElement {
 
     /**
-     * Constructs a new Line with the specified regex and property bindings.
-     * <p>
-     * Note: The regex pattern is not compiled during construction. Call {@link #compile()}
-     * before attempting to use this Line for matching operations.
-     *
-     * @param comment optional descriptive comment, may be null
-     * @param regex the regular expression pattern to match, must not be null or empty
-     * @param bindProperties the property bindings for captured groups, must not be null but may be empty
-     * @throws IllegalArgumentException if regex is null/empty, bindProperties is null, 
-     *                                  or bindProperties contains null values
+     * Creates a Line record with validation and regex compilation.
      */
-    public Line(String comment, String regex, List<PropertyBinding> bindProperties) {
-        super(comment);
-        
+    public Line {
         if (regex == null || regex.trim().isEmpty()) {
             throw new IllegalArgumentException("regex must not be null or empty");
         }
@@ -62,60 +53,44 @@ public final class Line extends LineElement {
             }
         }
         
-        this.regex = regex.trim();
-        this.bindProperties = Collections.unmodifiableList(new ArrayList<>(bindProperties));
+        // Trim regex and create immutable list
+        regex = regex.trim();
+        bindProperties = Collections.unmodifiableList(List.copyOf(bindProperties));
+        
+        // Compile the regex pattern during construction
+        try {
+            compiledPattern = Pattern.compile(regex);
+        } catch (PatternSyntaxException e) {
+            throw new PatternCompilationException("Invalid regex pattern '" + regex + "': " + e.getMessage(), e);
+        }
     }
 
     /**
-     * Constructs a new Line with the specified regex and property bindings.
-     * <p>
-     * Note: The regex pattern is not compiled during construction. Call {@link #compile()}
-     * before attempting to use this Line for matching operations.
+     * Creates a new Line with the specified regex and property bindings.
      *
      * @param comment optional descriptive comment, may be null
      * @param regex the regular expression pattern to match, must not be null or empty
      * @param bindProperties the property bindings for captured groups, must not be null but may be empty
      * @throws IllegalArgumentException if regex is null/empty, bindProperties is null, 
      *                                  or bindProperties contains null values
+     * @throws PatternCompilationException if the regex pattern is invalid
+     */
+    public Line(String comment, String regex, List<PropertyBinding> bindProperties) {
+        this(comment, regex, bindProperties, null); // compiledPattern will be set in compact constructor
+    }
+
+    /**
+     * Creates a new Line with the specified regex and property bindings.
+     *
+     * @param comment optional descriptive comment, may be null
+     * @param regex the regular expression pattern to match, must not be null or empty
+     * @param bindProperties the property bindings for captured groups, must not be null but may be empty
+     * @throws IllegalArgumentException if regex is null/empty, bindProperties is null, 
+     *                                  or bindProperties contains null values
+     * @throws PatternCompilationException if the regex pattern is invalid
      */
     public Line(String comment, String regex, PropertyBinding... bindProperties) {
-        this(comment, regex, Arrays.asList(bindProperties));
-    }
-
-    /**
-     * Returns the regular expression pattern used for matching.
-     *
-     * @return the regex pattern string, never null or empty
-     */
-    public String getRegex() {
-        return regex;
-    }
-
-    /**
-     * Returns the compiled regex pattern for efficient matching.
-     * <p>
-     * This pattern is compiled during the {@link #compile()} phase.
-     *
-     * @return the compiled Pattern object, or null if not yet compiled
-     * @throws IllegalStateException if the pattern has not been compiled
-     */
-    public Pattern getCompiledPattern() {
-        if (!compiled) {
-            throw new IllegalStateException("Pattern must be compiled before accessing compiled pattern");
-        }
-        return compiledPattern;
-    }
-
-    /**
-     * Returns the property bindings that define how captured groups map to JSON properties.
-     * <p>
-     * The returned list is immutable and contains no null elements. Each binding
-     * corresponds positionally to a regex capture group.
-     *
-     * @return the list of property bindings, never null but may be empty
-     */
-    public List<PropertyBinding> getBindProperties() {
-        return bindProperties;
+        this(comment, regex, List.of(bindProperties));
     }
 
     /**
@@ -143,36 +118,20 @@ public final class Line extends LineElement {
      * the number of property bindings.
      *
      * @return the number of capturing groups in the compiled pattern
-     * @throws IllegalStateException if the pattern has not been compiled
      */
     public int getCaptureGroupCount() {
-        if (!compiled) {
-            throw new IllegalStateException("Pattern must be compiled before accessing capture group count");
-        }
         return compiledPattern.matcher("").groupCount();
     }
 
     @Override
     public void compile() {
-        if (compiled) {
-            return; // Already compiled - idempotent
-        }
-        
-        try {
-            compiledPattern = Pattern.compile(regex);
-            compiled = true;
-        } catch (PatternSyntaxException e) {
-            throw new PatternCompilationException("Invalid regex pattern '" + regex + "': " + e.getMessage(), e);
-        }
+        // Pattern is already compiled during construction - this is a no-op
+        // but required by the interface for consistency
     }
 
     @Override
     public LineMatchResult match(String inputLine) {
         Objects.requireNonNull(inputLine, "inputLine must not be null");
-        
-        if (!compiled) {
-            throw new IllegalStateException("Pattern must be compiled before matching");
-        }
         
         Matcher matcher = compiledPattern.matcher(inputLine);
         if (!matcher.find()) {
@@ -195,122 +154,48 @@ public final class Line extends LineElement {
         return visitor.visitLine(this);
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!super.equals(obj)) {
-            return false;
-        }
-        Line line = (Line) obj;
-        return Objects.equals(regex, line.regex) &&
-               Objects.equals(bindProperties, line.bindProperties);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), regex, bindProperties);
-    }
-
-    @Override
-    public String toString() {
-        return "Line[" +
-               "regex=" + regex +
-               ", bindings=" + bindProperties.size() +
-               (getComment() != null ? ", comment=" + getComment() : "") +
-               "]";
-    }
-
     /**
-     * Creates a new builder for constructing Line instances.
+     * Returns the property bindings that define how captured groups map to JSON properties.
+     * <p>
+     * This is a convenience method equivalent to accessing the {@code bindProperties} component directly.
      *
-     * @return a new Builder instance, never null
+     * @return the list of property bindings, never null but may be empty
      */
-    public static Builder builder() {
-        return new Builder();
+    public List<PropertyBinding> getBindProperties() {
+        return bindProperties;
     }
 
     /**
-     * Builder class for constructing Line instances using a fluent API.
+     * Returns the regular expression pattern used for matching.
+     * <p>
+     * This is a convenience method equivalent to accessing the {@code regex} component directly.
+     *
+     * @return the regex pattern string, never null or empty
      */
-    public static final class Builder {
-        private String comment;
-        private String regex;
-        private List<PropertyBinding> bindProperties;
+    public String getRegex() {
+        return regex;
+    }
 
-        private Builder() {}
+    /**
+     * Returns the compiled regex pattern for efficient matching.
+     * <p>
+     * This is a convenience method equivalent to accessing the {@code compiledPattern} component directly.
+     *
+     * @return the compiled Pattern object, never null
+     */
+    public Pattern getCompiledPattern() {
+        return compiledPattern;
+    }
 
-        /**
-         * Sets an optional comment describing this line.
-         *
-         * @param comment the comment text, may be null
-         * @return this builder for method chaining
-         */
-        public Builder comment(String comment) {
-            this.comment = comment;
-            return this;
-        }
-
-        /**
-         * Sets the regular expression pattern.
-         *
-         * @param regex the regex pattern, must not be null or empty
-         * @return this builder for method chaining
-         * @throws IllegalArgumentException if regex is null or empty
-         */
-        public Builder regex(String regex) {
-            if (regex == null || regex.trim().isEmpty()) {
-                throw new IllegalArgumentException("regex must not be null or empty");
-            }
-            this.regex = regex.trim();
-            return this;
-        }
-
-        /**
-         * Sets the property bindings.
-         *
-         * @param bindProperties the property bindings, must not be null
-         * @return this builder for method chaining
-         * @throws IllegalArgumentException if bindProperties is null
-         */
-        public Builder bindProperties(List<PropertyBinding> bindProperties) {
-            Objects.requireNonNull(bindProperties, "bindProperties must not be null");
-            this.bindProperties = bindProperties;
-            return this;
-        }
-
-        /**
-         * Sets the property bindings.
-         *
-         * @param bindProperties the property bindings, must not be null
-         * @return this builder for method chaining
-         * @throws IllegalArgumentException if bindProperties is null
-         */
-        public Builder bindProperties(PropertyBinding... bindProperties) {
-            Objects.requireNonNull(bindProperties, "bindProperties must not be null");
-            this.bindProperties = Arrays.asList(bindProperties);
-            return this;
-        }
-
-        /**
-         * Constructs a new Line with the configured properties.
-         * <p>
-         * Note: The regex pattern is not compiled during construction. Call {@link Line#compile()}
-         * on the returned instance before attempting to use it for matching operations.
-         *
-         * @return a new Line instance, never null
-         * @throws IllegalStateException if required properties are not set
-         */
-        public Line build() {
-            if (regex == null) {
-                throw new IllegalStateException("regex is required");
-            }
-            if (bindProperties == null) {
-                bindProperties = Collections.emptyList();
-            }
-
-            return new Line(comment, regex, bindProperties);
-        }
+    /**
+     * Returns the optional comment associated with this pattern element.
+     * <p>
+     * This is a convenience method equivalent to accessing the {@code comment} component directly.
+     *
+     * @return the comment string, or null if no comment was provided
+     */
+    @Override
+    public String getComment() {
+        return comment;
     }
 }

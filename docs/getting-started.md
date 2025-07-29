@@ -174,7 +174,7 @@ DrexPattern pattern = DrexPattern.builder()
         // Extract line items (one or more)
         Repeat.builder()
             .bindArray("items")
-            .mode(RepeatMode.ONE_OR_MORE)
+            .mode(Repeat.Mode.ONE_OR_MORE)
             .elements(
                 Line.builder()
                     .regex("(\\\\S+)\\\\s+(\\\\d+)\\\\s+([\\\\d\\\\.]+)")

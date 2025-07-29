@@ -93,7 +93,7 @@ DrexPattern invoicePattern = DrexPattern.builder()
             .build(),
         Repeat.builder()
             .bindArray("items")
-            .mode(RepeatMode.ONE_OR_MORE)
+            .mode(Repeat.Mode.ONE_OR_MORE)
             .comment("Extract line items")
             .elements(
                 Line.builder()
@@ -257,7 +257,7 @@ DrexPattern tableInvoicePattern = DrexPattern.builder()
             .build(),
         Repeat.builder()
             .bindArray("items")
-            .mode(RepeatMode.ONE_OR_MORE)
+            .mode(Repeat.Mode.ONE_OR_MORE)
             .comment("Extract table rows")
             .elements(
                 Line.builder()
@@ -374,7 +374,7 @@ DrexPattern purchaseOrderPattern = DrexPattern.builder()
             .build(),
         Repeat.builder()
             .bindArray("lineItems")
-            .mode(RepeatMode.ONE_OR_MORE)
+            .mode(Repeat.Mode.ONE_OR_MORE)
             .comment("Extract purchase order line items")
             .elements(
                 Line.builder()
@@ -615,7 +615,7 @@ DrexPattern eobPattern = DrexPattern.builder()
             .build(),
         Repeat.builder()
             .bindArray("services")
-            .mode(RepeatMode.ONE_OR_MORE)
+            .mode(Repeat.Mode.ONE_OR_MORE)
             .comment("Extract service details")
             .elements(
                 Group.builder()
@@ -816,7 +816,7 @@ DrexPattern logPattern = DrexPattern.builder()
     .elements(
         Repeat.builder()
             .bindArray("logEntries")
-            .mode(RepeatMode.ZERO_OR_MORE)
+            .mode(Repeat.Mode.ZERO_OR_MORE)
             .comment("Process all log entries")
             .elements(
                 Or.builder()
@@ -836,7 +836,7 @@ DrexPattern logPattern = DrexPattern.builder()
                                     .build(),
                                 Repeat.builder()
                                     .bindArray("stackTrace")
-                                    .mode(RepeatMode.ZERO_OR_MORE)
+                                    .mode(Repeat.Mode.ZERO_OR_MORE)
                                     .comment("Capture stack trace lines if present")
                                     .elements(
                                         Line.builder()

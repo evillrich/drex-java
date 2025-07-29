@@ -137,7 +137,7 @@ DrexPattern pattern = DrexPattern.builder()
                     .build(),
                 Repeat.builder()
                     .bindArray("items")
-                    .mode(RepeatMode.ONE_OR_MORE)
+                    .mode(Repeat.Mode.ONE_OR_MORE)
                     .elements(
                         Line.builder()
                             .regex("(\\\\S+)\\\\s+(\\\\d+)\\\\s+([\\\\d\\\\.]+)")
@@ -231,7 +231,7 @@ Group.builder()
 // One or more iterations
 Repeat.builder()
     .bindArray("lineItems")
-    .mode(RepeatMode.ONE_OR_MORE)
+    .mode(Repeat.Mode.ONE_OR_MORE)
     .elements(
         Line.builder()
             .regex("(\\\\d+)\\\\s+(.+)\\\\s+\\\\$([\\\\d\\\\.]+)")
@@ -247,7 +247,7 @@ Repeat.builder()
 // Zero or more iterations
 Repeat.builder()
     .bindArray("optionalNotes")
-    .mode(RepeatMode.ZERO_OR_MORE)
+    .mode(Repeat.Mode.ZERO_OR_MORE)
     .elements(
         Line.builder()
             .regex("Note: (.+)")
@@ -259,7 +259,7 @@ Repeat.builder()
 // Zero or one iteration
 Repeat.builder()
     .bindArray("signature")
-    .mode(RepeatMode.ZERO_OR_ONE)
+    .mode(Repeat.Mode.ZERO_OR_ONE)
     .elements(
         Line.builder()
             .regex("Signature: (.+)")
@@ -329,7 +329,7 @@ DrexPattern complexPattern = DrexPattern.builder()
             .build(),
         Repeat.builder()
             .bindArray("sections")
-            .mode(RepeatMode.ONE_OR_MORE)
+            .mode(Repeat.Mode.ONE_OR_MORE)
             .elements(
                 Group.builder()
                     .elements(
@@ -339,7 +339,7 @@ DrexPattern complexPattern = DrexPattern.builder()
                             .build(),
                         Repeat.builder()
                             .bindArray("items")
-                            .mode(RepeatMode.ZERO_OR_MORE)
+                            .mode(Repeat.Mode.ZERO_OR_MORE)
                             .elements(
                                 Line.builder()
                                     .regex("  - (.+)")

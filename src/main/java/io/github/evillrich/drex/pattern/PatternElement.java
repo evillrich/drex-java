@@ -1,9 +1,7 @@
 package io.github.evillrich.drex.pattern;
 
-import java.util.Objects;
-
 /**
- * Abstract base class for all pattern elements in the Drex pattern hierarchy.
+ * Interface for all pattern elements in the Drex pattern hierarchy.
  * <p>
  * PatternElement represents a single component in a document pattern that can be
  * used to match and extract data from text documents. All pattern elements support
@@ -14,18 +12,7 @@ import java.util.Objects;
  * @since 1.0
  * @see PatternVisitor
  */
-public abstract class PatternElement {
-
-    private final String comment;
-
-    /**
-     * Constructs a new PatternElement with an optional comment.
-     *
-     * @param comment optional descriptive comment for this pattern element, may be null
-     */
-    protected PatternElement(String comment) {
-        this.comment = comment;
-    }
+public interface PatternElement {
 
     /**
      * Returns the optional comment associated with this pattern element.
@@ -34,9 +21,7 @@ public abstract class PatternElement {
      *
      * @return the comment string, or null if no comment was provided
      */
-    public final String getComment() {
-        return comment;
-    }
+    String getComment();
 
     /**
      * Compiles this pattern element for efficient matching.
@@ -52,7 +37,7 @@ public abstract class PatternElement {
      * @throws PatternCompilationException if the pattern cannot be compiled (unchecked)
      * @throws IllegalStateException if the pattern is in an invalid state for compilation
      */
-    public abstract void compile();
+    void compile();
 
     /**
      * Accepts a visitor for processing this pattern element.
@@ -65,28 +50,5 @@ public abstract class PatternElement {
      * @return the result of the visitor operation
      * @throws IllegalArgumentException if visitor is null
      */
-    public abstract <T> T accept(PatternVisitor<T> visitor);
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-        PatternElement that = (PatternElement) obj;
-        return Objects.equals(comment, that.comment);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(comment);
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + 
-               (comment != null ? "[comment=" + comment + "]" : "");
-    }
+    <T> T accept(PatternVisitor<T> visitor);
 }
