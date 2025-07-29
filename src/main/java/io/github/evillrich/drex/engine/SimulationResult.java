@@ -31,20 +31,6 @@ public final class SimulationResult {
         this.errorMessage = null;
     }
 
-    /**
-     * Creates a failed simulation result.
-     *
-     * @param errorMessage description of why the simulation failed, must not be null
-     * @param linesProcessed the number of document lines processed before failure
-     * @throws IllegalArgumentException if errorMessage is null or linesProcessed is negative
-     */
-    public SimulationResult(String errorMessage, int linesProcessed) {
-        this.success = false;
-        this.extractedData = null;
-        this.linesProcessed = validateLinesProcessed(linesProcessed);
-        this.errorMessage = Objects.requireNonNull(errorMessage, "Error message cannot be null");
-    }
-
     private static int validateLinesProcessed(int linesProcessed) {
         if (linesProcessed < 0) {
             throw new IllegalArgumentException("Lines processed cannot be negative: " + linesProcessed);
