@@ -1,5 +1,6 @@
 package io.github.evillrich.drex.engine;
 
+import io.github.evillrich.drex.pattern.CompositePatternElement;
 import io.github.evillrich.drex.pattern.GroupingPatternElement;
 import io.github.evillrich.drex.pattern.LineElement;
 import java.util.Objects;
@@ -122,7 +123,7 @@ public final class Transition {
     private final EditType editOperation;
     private final State fromState;
     private final State toState;
-    private final GroupingPatternElement group;
+    private final CompositePatternElement compositeElement;
     private final LineElement line;
 
     /**
@@ -132,18 +133,18 @@ public final class Transition {
      * @param editOperation the edit operation type for fuzzy matching, must not be null
      * @param fromState the source state, must not be null
      * @param toState the destination state, must not be null
-     * @param group the grouping pattern element associated with this transition, may be null
+     * @param compositeElement the composite pattern element (Group, Repeat, Or, etc.) associated with this transition, may be null
      * @param line the line element associated with this transition, may be null
      * @throws IllegalArgumentException if any required parameter is null
      */
     public Transition(OperationType operation, EditType editOperation, 
                      State fromState, State toState, 
-                     GroupingPatternElement group, LineElement line) {
+                     CompositePatternElement compositeElement, LineElement line) {
         this.operation = Objects.requireNonNull(operation, "Operation type cannot be null");
         this.editOperation = Objects.requireNonNull(editOperation, "Edit operation cannot be null");
         this.fromState = Objects.requireNonNull(fromState, "From state cannot be null");
         this.toState = Objects.requireNonNull(toState, "To state cannot be null");
-        this.group = group;
+        this.compositeElement = compositeElement;
         this.line = line;
     }
 
@@ -153,13 +154,13 @@ public final class Transition {
      * @param operation the type of operation this transition performs, must not be null
      * @param fromState the source state, must not be null
      * @param toState the destination state, must not be null
-     * @param group the grouping pattern element associated with this transition, may be null
+     * @param compositeElement the composite pattern element associated with this transition, may be null
      * @param line the line element associated with this transition, may be null
      * @throws IllegalArgumentException if any required parameter is null
      */
     public Transition(OperationType operation, State fromState, State toState, 
-                     GroupingPatternElement group, LineElement line) {
-        this(operation, EditType.None, fromState, toState, group, line);
+                     CompositePatternElement compositeElement, LineElement line) {
+        this(operation, EditType.None, fromState, toState, compositeElement, line);
     }
 
     /**
@@ -199,12 +200,25 @@ public final class Transition {
     }
 
     /**
+     * Returns the composite pattern element associated with this transition.
+     *
+     * @return the composite element (Group, Repeat, Or, etc.), may be null
+     */
+    public CompositePatternElement getCompositeElement() {
+        return compositeElement;
+    }
+
+    /**
      * Returns the grouping pattern element associated with this transition.
+     * This is a convenience method that casts the composite element to GroupingPatternElement.
      *
      * @return the group element, may be null
+     * @throws ClassCastException if the composite element is not a GroupingPatternElement
+     * @deprecated Use getCompositeElement() and instanceof checks instead
      */
+    @Deprecated
     public GroupingPatternElement getGroup() {
-        return group;
+        return (GroupingPatternElement) compositeElement;
     }
 
     /**
@@ -225,13 +239,13 @@ public final class Transition {
                editOperation == that.editOperation &&
                Objects.equals(fromState, that.fromState) &&
                Objects.equals(toState, that.toState) &&
-               Objects.equals(group, that.group) &&
+               Objects.equals(compositeElement, that.compositeElement) &&
                Objects.equals(line, that.line);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(operation, editOperation, fromState, toState, group, line);
+        return Objects.hash(operation, editOperation, fromState, toState, compositeElement, line);
     }
 
     @Override

@@ -136,9 +136,9 @@ public class NFABuilder implements PatternVisitor<NFA> {
         NFA childNFA = childElement.accept(this);
         
         return switch (repeat.getMode()) {
-            case ZERO_OR_MORE -> buildZeroOrMore(childNFA, childElement);
-            case ONE_OR_MORE -> buildOneOrMore(childNFA, childElement);  
-            case ZERO_OR_ONE -> buildZeroOrOne(childNFA, childElement);
+            case ZERO_OR_MORE -> buildZeroOrMore(childNFA, childElement, repeat);
+            case ONE_OR_MORE -> buildOneOrMore(childNFA, childElement, repeat);  
+            case ZERO_OR_ONE -> buildZeroOrOne(childNFA, childElement, repeat);
         };
     }
 
@@ -275,7 +275,7 @@ public class NFABuilder implements PatternVisitor<NFA> {
     /**
      * Builds a zero-or-more NFA (equivalent to * quantifier).
      */
-    private NFA buildZeroOrMore(NFA childNFA, PatternElement childElement) {
+    private NFA buildZeroOrMore(NFA childNFA, PatternElement childElement, Repeat repeat) {
         State newInitial = newState();
         State newFinal = newState();
         
@@ -283,37 +283,37 @@ public class NFABuilder implements PatternVisitor<NFA> {
         
         // Handle "Zero" - epsilon transition to final (added first for proper priority)
         Transition zeroTransition = new Transition(Transition.OperationType.RepeatZero,
-            newInitial, newFinal, null, null);
+            newInitial, newFinal, repeat, null);
         newInitial.addTransition(zeroTransition);
         
         // Epsilon transition to child NFA
         Transition oneTransition = new Transition(Transition.OperationType.RepeatOne,
-            newInitial, childNFA.getInitialState(), null, null);
+            newInitial, childNFA.getInitialState(), repeat, null);
         newInitial.addTransition(oneTransition);
         
         // Handle ordering for AnyLine vs other elements
         if (!isAnyLine) {
             // Epsilon transition from child final to new final
             Transition endTransition = new Transition(Transition.OperationType.RepeatEnd,
-                childNFA.getFinalState(), newFinal, null, null);
+                childNFA.getFinalState(), newFinal, repeat, null);
             childNFA.getFinalState().addTransition(endTransition);
         }
         
         // Handle "More" - epsilon transition back to child initial (added last for priority)
         if (!isAnyLine) {
             Transition moreTransition = new Transition(Transition.OperationType.RepeatMore,
-                childNFA.getFinalState(), childNFA.getInitialState(), null, null);
+                childNFA.getFinalState(), childNFA.getInitialState(), repeat, null);
             childNFA.getFinalState().addTransition(moreTransition);
         } else {
             Transition anylineMoreTransition = new Transition(Transition.OperationType.RepeatAnyLineMore,
-                childNFA.getFinalState(), childNFA.getInitialState(), null, null);
+                childNFA.getFinalState(), childNFA.getInitialState(), repeat, null);
             childNFA.getFinalState().addTransition(anylineMoreTransition);
         }
         
         if (isAnyLine) {
             // For AnyLine, add final transition after the repeat transition
             Transition endTransition = new Transition(Transition.OperationType.RepeatEnd,
-                childNFA.getFinalState(), newFinal, null, null);
+                childNFA.getFinalState(), newFinal, repeat, null);
             childNFA.getFinalState().addTransition(endTransition);
         }
         
@@ -323,7 +323,7 @@ public class NFABuilder implements PatternVisitor<NFA> {
     /**
      * Builds a one-or-more NFA (equivalent to + quantifier).
      */
-    private NFA buildOneOrMore(NFA childNFA, PatternElement childElement) {
+    private NFA buildOneOrMore(NFA childNFA, PatternElement childElement, Repeat repeat) {
         State newInitial = newState();
         State newFinal = newState();
         
@@ -331,32 +331,32 @@ public class NFABuilder implements PatternVisitor<NFA> {
         
         // Epsilon transition to child NFA (must match at least once)
         Transition oneTransition = new Transition(Transition.OperationType.RepeatOne,
-            newInitial, childNFA.getInitialState(), null, null);
+            newInitial, childNFA.getInitialState(), repeat, null);
         newInitial.addTransition(oneTransition);
         
         // Handle ordering for AnyLine vs other elements
         if (!isAnyLine) {
             // Epsilon transition from child final to new final
             Transition endTransition = new Transition(Transition.OperationType.RepeatEnd,
-                childNFA.getFinalState(), newFinal, null, null);
+                childNFA.getFinalState(), newFinal, repeat, null);
             childNFA.getFinalState().addTransition(endTransition);
         }
         
         // Handle "More" - epsilon transition back to child initial (added last for priority)
         if (!isAnyLine) {
             Transition moreTransition = new Transition(Transition.OperationType.RepeatMore,
-                childNFA.getFinalState(), childNFA.getInitialState(), null, null);
+                childNFA.getFinalState(), childNFA.getInitialState(), repeat, null);
             childNFA.getFinalState().addTransition(moreTransition);
         } else {
             Transition anylineMoreTransition = new Transition(Transition.OperationType.RepeatAnyLineMore,
-                childNFA.getFinalState(), childNFA.getInitialState(), null, null);
+                childNFA.getFinalState(), childNFA.getInitialState(), repeat, null);
             childNFA.getFinalState().addTransition(anylineMoreTransition);
         }
         
         if (isAnyLine) {
             // For AnyLine, add final transition after the repeat transition
             Transition endTransition = new Transition(Transition.OperationType.RepeatEnd,
-                childNFA.getFinalState(), newFinal, null, null);
+                childNFA.getFinalState(), newFinal, repeat, null);
             childNFA.getFinalState().addTransition(endTransition);
         }
         
@@ -366,7 +366,7 @@ public class NFABuilder implements PatternVisitor<NFA> {
     /**
      * Builds a zero-or-one NFA (equivalent to ? quantifier).
      */
-    private NFA buildZeroOrOne(NFA childNFA, PatternElement childElement) {
+    private NFA buildZeroOrOne(NFA childNFA, PatternElement childElement, Repeat repeat) {
         State newInitial = newState();
         State newFinal = newState();
         
@@ -376,24 +376,24 @@ public class NFABuilder implements PatternVisitor<NFA> {
         if (!isAnyLine) {
             // Epsilon transition from child final to new final
             Transition endTransition = new Transition(Transition.OperationType.RepeatEnd,
-                childNFA.getFinalState(), newFinal, null, null);
+                childNFA.getFinalState(), newFinal, repeat, null);
             childNFA.getFinalState().addTransition(endTransition);
         }
         
         // Handle "Zero" - epsilon transition to final (added first for proper priority)
         Transition zeroTransition = new Transition(Transition.OperationType.RepeatZero,
-            newInitial, newFinal, null, null);
+            newInitial, newFinal, repeat, null);
         newInitial.addTransition(zeroTransition);
         
         // Epsilon transition to child NFA
         Transition oneTransition = new Transition(Transition.OperationType.RepeatOne,
-            newInitial, childNFA.getInitialState(), null, null);
+            newInitial, childNFA.getInitialState(), repeat, null);
         newInitial.addTransition(oneTransition);
         
         if (isAnyLine) {
             // For AnyLine, add final transition at the end
             Transition endTransition = new Transition(Transition.OperationType.RepeatEnd,
-                childNFA.getFinalState(), newFinal, null, null);
+                childNFA.getFinalState(), newFinal, repeat, null);
             childNFA.getFinalState().addTransition(endTransition);
         }
         
