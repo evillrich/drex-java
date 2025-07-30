@@ -3,6 +3,7 @@ package io.github.evillrich.drex.pattern;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 /**
  * Represents a line pattern element that matches any single line of text.
@@ -118,6 +119,13 @@ public final class Anyline extends LineElement {
     protected void compileElement() {
         // Anyline doesn't need compilation - no-op but required by interface
         // This method is idempotent and can be called multiple times safely
+    }
+
+    @Override
+    public Pattern getCompiledPattern() {
+        // Anyline uses a simple pattern that matches any non-empty line
+        // This is a placeholder for NFA simulation compatibility
+        return Pattern.compile(".*\\S.*");
     }
 
     @Override

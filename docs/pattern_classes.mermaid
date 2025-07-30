@@ -1,99 +1,117 @@
 classDiagram
     class PatternElement {
-        <<interface>>
+        <<abstract>>
         +getComment() string
-        +compile() void
+        +compileElement() void
         +accept(visitor) T
     }
 
     class CompositePatternElement {
-        <<interface>>
+        <<abstract>>
         +getElements() List~PatternElement~
         +getElementCount() int
         +isEmpty() boolean
-        +compile() void
     }
 
     class GroupingPatternElement {
-        <<interface>>
+        <<abstract>>
         +getBindObject() string
     }
 
     class LineElement {
-        <<interface>>
+        <<abstract>>
         +match(inputLine) LineMatchResult
     }
 
     class DrexPattern {
-        <<record>>
-        +string version
-        +string name
-        +string comment
-        +string bindObject
-        +int editDistance
-        +List~PatternElement~ elements
+        <<class>>
+        -string version
+        -string name  
+        -string comment
+        -string bindObject
+        -Integer editDistance
+        -List~PatternElement~ elements
         +getVersion() string
         +getName() string
-        +getEditDistance() int
+        +getComment() string
+        +getBindObject() string
+        +getEditDistance() Integer
+        +getElements() List~PatternElement~
         +isFuzzyMatchingEnabled() boolean
+        +builder() DrexPatternBuilder
         +accept(visitor) T
     }
 
     class Group {
-        <<record>>
-        +string comment
-        +string bindObject
-        +List~PatternElement~ elements
+        <<class>>
+        -string comment
+        -string bindObject
+        -List~PatternElement~ elements
+        +getComment() string
+        +getBindObject() string
+        +getElements() List~PatternElement~
+        +builder() GroupBuilder
         +accept(visitor) T
     }
 
     class Repeat {
-        <<record>>
-        +string comment
-        +Mode mode
-        +string bindArray
-        +List~PatternElement~ elements
+        <<class>>
+        -string comment
+        -Mode mode
+        -string bindArray
+        -List~PatternElement~ elements
+        +getComment() string
         +getMode() Mode
         +getBindArray() string
+        +getElements() List~PatternElement~
         +requiresMatch() boolean
         +allowsMultiple() boolean
+        +builder() RepeatBuilder
         +accept(visitor) T
     }
 
     class Or {
-        <<record>>
-        +string comment
-        +List~PatternElement~ elements
+        <<class>>
+        -string comment
+        -List~PatternElement~ elements
+        +getComment() string
+        +getElements() List~PatternElement~
         +getAlternatives() List~PatternElement~
         +getAlternativeCount() int
+        +builder() OrBuilder
         +accept(visitor) T
     }
 
     class Line {
-        <<record>>
-        +string comment
-        +string regex
-        +List~PropertyBinding~ bindProperties
-        +Pattern compiledPattern
+        <<class>>
+        -string comment
+        -string regex
+        -List~PropertyBinding~ bindProperties
+        -Pattern compiledPattern
+        +getComment() string
         +getRegex() string
         +getBindProperties() List~PropertyBinding~
         +getCompiledPattern() Pattern
+        +compiledPattern() Pattern
         +getBindingCount() int
         +hasBindings() boolean
         +getCaptureGroupCount() int
-        +compile() void
+        +builder() LineBuilder
+        +compileElement() void
         +match(inputLine) LineMatchResult
         +accept(visitor) T
     }
 
     class Anyline {
-        <<record>>
-        +string comment
-        +List~PropertyBinding~ bindProperties
+        <<class>>
+        -string comment
+        -List~PropertyBinding~ bindProperties
+        +getComment() string
         +getBindProperties() List~PropertyBinding~
         +getBindingCount() int
         +hasBindings() boolean
-        +compile() void
+        +builder() AnylineBuilder
+        +compileElement() void
         +match(inputLine) LineMatchResult
         +accept(visitor) T
     }
@@ -110,37 +128,43 @@ classDiagram
     }
 
     class PropertyBinding {
-        <<record>>
-        +string property
-        +string format
+        <<class>>
+        -string property
+        -string format
         +getProperty() string
         +getFormat() string
         +hasFormat() boolean
+        +of(property) PropertyBinding
+        +of(property, format) PropertyBinding
     }
 
     class LineMatchResult {
-        <<record>>
-        +boolean matched
-        +string matchedText
-        +List~String~ capturedGroups
+        <<class>>
+        -boolean matched
+        -string matchedText
+        -List~String~ capturedGroups
         +isMatched() boolean
+        +getMatchedText() string
+        +getCapturedGroups() List~String~
         +getCaptureCount() int
         +getCapturedGroup(index) string
+        +success(matchedText, capturedGroups) LineMatchResult
+        +failure() LineMatchResult
     }
 
 %% Relationships
-    PatternElement <|.. CompositePatternElement : extends
-    PatternElement <|.. LineElement : extends
+    PatternElement <|-- CompositePatternElement : extends
+    PatternElement <|-- LineElement : extends
 
-    CompositePatternElement <|.. GroupingPatternElement : extends
-    GroupingPatternElement <|.. DrexPattern : implements
-    GroupingPatternElement <|.. Group : implements
+    CompositePatternElement <|-- GroupingPatternElement : extends
+    GroupingPatternElement <|-- DrexPattern : extends
+    GroupingPatternElement <|-- Group : extends
 
-    CompositePatternElement <|.. Repeat : implements
-    CompositePatternElement <|.. Or : implements
+    CompositePatternElement <|-- Repeat : extends
+    CompositePatternElement <|-- Or : extends
 
-    LineElement <|.. Line : implements
-    LineElement <|.. Anyline : implements
+    LineElement <|-- Line : extends
+    LineElement <|-- Anyline : extends
 
     CompositePatternElement "1" *-- "many" PatternElement : contains
 
@@ -152,3 +176,5 @@ classDiagram
 
 %% Self-referencing for recursive structure
     PatternElement ..> PatternElement : references
+
+%% Note: compiledPattern in Line is lazily initialized on first access
