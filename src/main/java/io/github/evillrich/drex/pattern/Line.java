@@ -157,28 +157,6 @@ public final class Line extends LineElement {
         }
     }
 
-    @Override
-    public LineMatchResult match(String inputLine) {
-        Objects.requireNonNull(inputLine, "inputLine must not be null");
-        
-        if (compiledPattern == null) {
-            compileElement();
-        }
-        
-        Matcher matcher = compiledPattern.matcher(inputLine);
-        if (!matcher.find()) {
-            return LineMatchResult.failure();
-        }
-        
-        // Extract captured groups
-        List<String> capturedGroups = new ArrayList<>();
-        int groupCount = matcher.groupCount();
-        for (int i = 1; i <= groupCount; i++) {
-            capturedGroups.add(matcher.group(i));
-        }
-        
-        return LineMatchResult.success(matcher.group(0), capturedGroups);
-    }
 
     @Override
     public <T> T accept(PatternVisitor<T> visitor) {
