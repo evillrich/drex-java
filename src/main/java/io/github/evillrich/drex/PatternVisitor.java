@@ -1,4 +1,4 @@
-package io.github.evillrich.drex.pattern;
+package io.github.evillrich.drex;
 
 /**
  * Visitor interface for processing pattern elements in the Drex pattern hierarchy.
@@ -11,7 +11,7 @@ package io.github.evillrich.drex.pattern;
  * @since 1.0
  * @see PatternElement
  */
-public interface PatternVisitor<T> {
+interface PatternVisitor<T> {
 
     /**
      * Visits a DrexPattern element.

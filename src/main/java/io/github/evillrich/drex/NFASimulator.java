@@ -1,4 +1,4 @@
-package io.github.evillrich.drex.engine;
+package io.github.evillrich.drex;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ import java.util.List;
  *
  * @since 1.0
  */
-public interface NFASimulator {
+interface NFASimulator {
     
     /**
      * Simulates the NFA against the given document lines to extract matching data.

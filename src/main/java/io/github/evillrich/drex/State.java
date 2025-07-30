@@ -1,4 +1,4 @@
-package io.github.evillrich.drex.engine;
+package io.github.evillrich.drex;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.Objects;
  *
  * @since 1.0
  */
-public final class State {
+final class State {
     private final int number;
     private final List<Transition> transitionsOut;
 

@@ -1,4 +1,4 @@
-package io.github.evillrich.drex.engine;
+package io.github.evillrich.drex;
 
 import java.util.*;
 
@@ -14,7 +14,7 @@ import java.util.*;
  *
  * @since 1.0
  */
-public final class BindingContext {
+final class BindingContext {
     
     private final Stack<ContextFrame> contextStack;
     private final List<CaptureInfo> captures;

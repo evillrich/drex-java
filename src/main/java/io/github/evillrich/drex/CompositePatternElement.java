@@ -1,4 +1,4 @@
-package io.github.evillrich.drex.pattern;
+package io.github.evillrich.drex;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ import java.util.List;
  * @since 1.0
  * @see PatternElement
  */
-public abstract class CompositePatternElement extends PatternElement {
+abstract class CompositePatternElement extends PatternElement {
 
     /**
      * Returns an immutable list of child pattern elements.

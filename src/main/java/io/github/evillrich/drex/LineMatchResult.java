@@ -1,4 +1,4 @@
-package io.github.evillrich.drex.pattern;
+package io.github.evillrich.drex;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,7 +18,7 @@ import java.util.Objects;
  * @see Line
  * @see Anyline
  */
-public final class LineMatchResult {
+final class LineMatchResult {
 
     private final boolean matched;
     private final String matchedText;

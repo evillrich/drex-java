@@ -17,3 +17,5 @@ Thumbs.db
 
 # Java
 *.class
+
+.claude/

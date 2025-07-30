@@ -1,4 +1,4 @@
-package io.github.evillrich.drex.pattern;
+package io.github.evillrich.drex;
 
 import java.util.List;
 
@@ -19,7 +19,7 @@ import java.util.List;
  * @see Line
  * @see Anyline
  */
-public abstract class LineElement extends PatternElement {
+abstract class LineElement extends PatternElement {
 
 
     /**

@@ -1,6 +1,5 @@
-package io.github.evillrich.drex.engine;
+package io.github.evillrich.drex;
 
-import io.github.evillrich.drex.pattern.DrexPattern;
 import java.util.Objects;
 
 /**
@@ -14,7 +13,7 @@ import java.util.Objects;
  *
  * @since 1.0
  */
-public final class NFA {
+final class NFA {
     private final State initialState;
     private final State finalState;
 
@@ -40,7 +39,7 @@ public final class NFA {
      * @param pattern the DrexPattern to convert to NFA, must not be null
      * @return the constructed NFA for the pattern, never null
      * @throws IllegalArgumentException if pattern is null
-     * @throws io.github.evillrich.drex.pattern.PatternCompilationException if pattern compilation fails
+     * @throws PatternCompilationException if pattern compilation fails
      */
     public static NFA fromPattern(DrexPattern pattern) {
         Objects.requireNonNull(pattern, "pattern must not be null");
