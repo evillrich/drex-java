@@ -1,5 +1,7 @@
 package io.github.evillrich.drex.engine;
 
+import java.util.List;
+
 /**
  * Interface for NFA simulation algorithms.
  * <p>
@@ -20,10 +22,9 @@ public interface NFASimulator {
      * The simulator processes the document according to its specific algorithm,
      * following the NFA transitions and executing the associated operations.
      *
-     * @param nfa the NFA to simulate, must not be null
      * @param documentLines the lines of the document to process, must not be null
      * @return the result of the simulation including extracted data and metadata
      * @throws IllegalArgumentException if nfa or documentLines is null
      */
-    SimulationResult simulate(NFA nfa, String[] documentLines);
+    SimulationResult simulate(List<String> documentLines);
 }
