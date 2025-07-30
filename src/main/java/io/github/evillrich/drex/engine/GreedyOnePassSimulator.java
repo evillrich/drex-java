@@ -75,7 +75,7 @@ public final class GreedyOnePassSimulator implements NFASimulator {
 
 
     @Override
-    public SimulationResult simulate(NFA nfa, String[] documentLines) {
+    public SimulationResult simulate(List<String> documentLines) {
         Objects.requireNonNull(nfa, "NFA cannot be null");
         Objects.requireNonNull(documentLines, "Document lines cannot be null");
         
@@ -87,8 +87,8 @@ public final class GreedyOnePassSimulator implements NFASimulator {
         
         try {
             // Main simulation loop
-            while (currentState != nfa.getFinalState() && lineIndex < documentLines.length) {
-                String currentLine = documentLines[lineIndex];
+            while (currentState != nfa.getFinalState() && lineIndex < documentLines.size()) {
+                String currentLine = documentLines.get(lineIndex);
                 
                 // Find the next transition to follow
                 Transition transition = selectTransition(currentState, currentLine);
