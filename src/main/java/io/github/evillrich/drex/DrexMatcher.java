@@ -53,7 +53,10 @@ public final class DrexMatcher {
      * @throws RuntimeException if the pattern cannot be compiled
      */
     public DrexMatcher(DrexPattern pattern) {
-        this.pattern = Objects.requireNonNull(pattern, "Pattern cannot be null");
+        if (pattern == null) {
+            throw new IllegalArgumentException("Pattern cannot be null");
+        }
+        this.pattern = pattern;
         
         try {
             // Compile the pattern for efficient matching
@@ -83,7 +86,9 @@ public final class DrexMatcher {
      * @throws IllegalArgumentException if inputLines is null
      */
     public DrexMatchResult findMatch(List<String> inputLines) {
-        Objects.requireNonNull(inputLines, "Input lines cannot be null");
+        if (inputLines == null) {
+            throw new IllegalArgumentException("Input lines cannot be null");
+        }
         
         try {
             // Delegate to the pattern's internal matching logic
@@ -108,7 +113,9 @@ public final class DrexMatcher {
      * @throws IllegalArgumentException if inputLines is null
      */
     public DrexMatchResult findMatch(String[] inputLines) {
-        Objects.requireNonNull(inputLines, "Input lines cannot be null");
+        if (inputLines == null) {
+            throw new IllegalArgumentException("Input lines cannot be null");
+        }
         return findMatch(Arrays.asList(inputLines));
     }
 
@@ -124,7 +131,9 @@ public final class DrexMatcher {
      * @throws IllegalArgumentException if document is null
      */
     public DrexMatchResult findMatch(String document) {
-        Objects.requireNonNull(document, "Document cannot be null");
+        if (document == null) {
+            throw new IllegalArgumentException("Document cannot be null");
+        }
         
         // Split on both \n and \r\n line separators
         String[] lines = document.split("\\r?\\n");
