@@ -32,4 +32,21 @@ public abstract class LineElement extends PatternElement {
      */
     public abstract List<PropertyBinding> getBindProperties();
 
+    /**
+     * Attempts to match the specified input line against this line element's pattern.
+     * <p>
+     * This method processes a single line of text input and attempts to match it
+     * against the pattern defined by this line element. For Line elements, this
+     * involves regex matching with capture groups. For Anyline elements, this
+     * matches any non-empty line.
+     * <p>
+     * The pattern element must be compiled before calling this method.
+     *
+     * @param inputLine the line of text to match against, must not be null
+     * @return a LineMatchResult indicating success or failure and any captured data
+     * @throws IllegalArgumentException if inputLine is null
+     * @throws IllegalStateException if the pattern has not been compiled
+     */
+    public abstract LineMatchResult match(String inputLine);
+
 }

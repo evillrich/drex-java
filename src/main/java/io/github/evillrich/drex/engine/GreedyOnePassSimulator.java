@@ -1,14 +1,14 @@
 package io.github.evillrich.drex.engine;
 
+import io.github.evillrich.drex.pattern.CompositePatternElement;
 import io.github.evillrich.drex.pattern.GroupingPatternElement;
 import io.github.evillrich.drex.pattern.LineElement;
+import io.github.evillrich.drex.pattern.LineMatchResult;
 import io.github.evillrich.drex.pattern.PropertyBinding;
 import io.github.evillrich.drex.pattern.Repeat;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * A greedy, non-backtracking NFA simulator implementation.
@@ -72,17 +72,7 @@ public final class GreedyOnePassSimulator implements NFASimulator {
         return editDistance;
     }
 
-    /**
-     * Simulates the NFA against the provided document lines.
-     *
-     * @param lines the document lines to process, must not be null
-     * @return the simulation result containing extracted data or failure information
-     * @throws IllegalArgumentException if lines is null
-     */
-    public SimulationResult simulate(List<String> lines) {
-        Objects.requireNonNull(lines, "Document lines cannot be null");
-        return simulate(lines.toArray(new String[0]));
-    }
+
 
     @Override
     public SimulationResult simulate(NFA nfa, String[] documentLines) {
@@ -191,8 +181,8 @@ public final class GreedyOnePassSimulator implements NFASimulator {
                 if (lineElement == null) {
                     return false;
                 }
-                Pattern pattern = lineElement.getCompiledPattern();
-                return pattern.matcher(currentLine).find();
+                LineMatchResult result = lineElement.match(currentLine);
+                return result.isMatched();
                 
             case OrSplit:
             case OrJoin:
@@ -259,59 +249,36 @@ public final class GreedyOnePassSimulator implements NFASimulator {
     private boolean executeMatchLine(Transition transition, String currentLine, 
                                    int lineIndex, BindingContext bindingContext) {
         LineElement lineElement = transition.getLine();
-        Pattern pattern = lineElement.getCompiledPattern();
-        Matcher matcher = pattern.matcher(currentLine);
+        LineMatchResult matchResult = lineElement.match(currentLine);
         
-        if (matcher.find()) {
+        if (matchResult.isMatched()) {
             List<PropertyBinding> bindings = lineElement.getBindProperties();
+            List<String> capturedGroups = matchResult.getCapturedGroups();
             
-            // Handle Anyline vs Line elements differently
-            if (lineElement instanceof io.github.evillrich.drex.pattern.Anyline) {
-                // For Anyline, bind the entire line to all specified properties
-                for (PropertyBinding binding : bindings) {
-                    String formattedValue = bindingContext.formatValue(currentLine, binding.getFormat());
-                    
-                    // Bind the property
-                    bindingContext.bindProperty(
-                        binding.getProperty(), 
-                        formattedValue, 
-                        binding.getFormat()
-                    );
-                    
-                    // Record capture for future position tracking
-                    bindingContext.recordCapture(new CaptureInfo(
-                        bindingContext.getCurrentPath() + "." + binding.getProperty(),
-                        currentLine,
-                        formattedValue,
-                        lineIndex,
-                        0,
-                        currentLine.length()
-                    ));
-                }
-            } else {
-                // For Line elements, bind captured groups
-                for (int i = 0; i < bindings.size() && i + 1 <= matcher.groupCount(); i++) {
-                    PropertyBinding binding = bindings.get(i);
-                    String capturedValue = matcher.group(i + 1); // Regex groups are 1-based
-                    String formattedValue = bindingContext.formatValue(capturedValue, binding.getFormat());
-                    
-                    // Bind the property
-                    bindingContext.bindProperty(
-                        binding.getProperty(), 
-                        formattedValue, 
-                        binding.getFormat()
-                    );
-                    
-                    // Record capture for future position tracking
-                    bindingContext.recordCapture(new CaptureInfo(
-                        bindingContext.getCurrentPath() + "." + binding.getProperty(),
-                        capturedValue,
-                        formattedValue,
-                        lineIndex,
-                        matcher.start(i + 1),
-                        matcher.end(i + 1)
-                    ));
-                }
+            // Bind captured groups to properties using polymorphic approach
+            for (int i = 0; i < bindings.size() && i < capturedGroups.size(); i++) {
+                PropertyBinding binding = bindings.get(i);
+                String capturedValue = capturedGroups.get(i);
+                String formattedValue = bindingContext.formatValue(capturedValue, binding.getFormat());
+                
+                // Bind the property
+                bindingContext.bindProperty(
+                    binding.getProperty(), 
+                    formattedValue, 
+                    binding.getFormat()
+                );
+                
+                // Record capture for future position tracking
+                // Note: Position tracking is simplified - for exact positions we'd need 
+                // LineMatchResult to include position information
+                bindingContext.recordCapture(new CaptureInfo(
+                    bindingContext.getCurrentPath() + "." + binding.getProperty(),
+                    capturedValue,
+                    formattedValue,
+                    lineIndex,
+                    0, // Start position - simplified
+                    capturedValue.length() // End position - simplified
+                ));
             }
             return true; // Advance to next line
         }
@@ -323,9 +290,12 @@ public final class GreedyOnePassSimulator implements NFASimulator {
      * Executes a StartGroup transition.
      */
     private boolean executeStartGroup(Transition transition, BindingContext bindingContext) {
-        GroupingPatternElement group = transition.getGroup();
-        if (group != null && group.getBindObject() != null) {
-            bindingContext.pushObject(group.getBindObject());
+        CompositePatternElement element = transition.getCompositeElement();
+        if (element instanceof GroupingPatternElement) {
+            GroupingPatternElement group = (GroupingPatternElement) element;
+            if (group.getBindObject() != null) {
+                bindingContext.pushObject(group.getBindObject());
+            }
         }
         return false; // Don't advance line
     }
@@ -342,9 +312,9 @@ public final class GreedyOnePassSimulator implements NFASimulator {
      * Executes a RepeatOne transition (start of repeat).
      */
     private boolean executeRepeatStart(Transition transition, BindingContext bindingContext) {
-        GroupingPatternElement group = transition.getGroup();
-        if (group != null && group instanceof io.github.evillrich.drex.pattern.Repeat) {
-            io.github.evillrich.drex.pattern.Repeat repeat = (io.github.evillrich.drex.pattern.Repeat) group;
+        CompositePatternElement element = transition.getCompositeElement();
+        if (element instanceof io.github.evillrich.drex.pattern.Repeat) {
+            io.github.evillrich.drex.pattern.Repeat repeat = (io.github.evillrich.drex.pattern.Repeat) element;
             String bindArrayName = repeat.getBindArray();
             bindingContext.pushArray(bindArrayName);
             bindingContext.pushArrayItem(); // Start first array item
