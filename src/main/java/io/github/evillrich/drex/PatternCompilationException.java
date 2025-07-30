@@ -1,4 +1,4 @@
-package io.github.evillrich.drex.pattern;
+package io.github.evillrich.drex;
 
 /**
  * Exception thrown when a pattern element cannot be compiled for matching.

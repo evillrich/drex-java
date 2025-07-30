@@ -1,4 +1,4 @@
-package io.github.evillrich.drex.pattern;
+package io.github.evillrich.drex;
 
 /**
  * Abstract base class for all pattern elements in the Drex pattern hierarchy.
@@ -12,7 +12,7 @@ package io.github.evillrich.drex.pattern;
  * @since 1.0
  * @see PatternVisitor
  */
-public abstract class PatternElement {
+abstract class PatternElement {
 
     /**
      * Returns the optional comment associated with this pattern element.

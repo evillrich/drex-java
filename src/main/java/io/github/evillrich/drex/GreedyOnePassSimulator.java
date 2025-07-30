@@ -1,11 +1,5 @@
-package io.github.evillrich.drex.engine;
+package io.github.evillrich.drex;
 
-import io.github.evillrich.drex.pattern.CompositePatternElement;
-import io.github.evillrich.drex.pattern.GroupingPatternElement;
-import io.github.evillrich.drex.pattern.LineElement;
-import io.github.evillrich.drex.pattern.LineMatchResult;
-import io.github.evillrich.drex.pattern.PropertyBinding;
-import io.github.evillrich.drex.pattern.Repeat;
 
 import java.util.List;
 import java.util.Objects;
@@ -25,7 +19,7 @@ import java.util.Objects;
  *
  * @since 1.0
  */
-public final class GreedyOnePassSimulator implements NFASimulator {
+final class GreedyOnePassSimulator implements NFASimulator {
     private final NFA nfa;
     private final int editDistance;
 
@@ -313,8 +307,8 @@ public final class GreedyOnePassSimulator implements NFASimulator {
      */
     private boolean executeRepeatStart(Transition transition, BindingContext bindingContext) {
         CompositePatternElement element = transition.getCompositeElement();
-        if (element instanceof io.github.evillrich.drex.pattern.Repeat) {
-            io.github.evillrich.drex.pattern.Repeat repeat = (io.github.evillrich.drex.pattern.Repeat) element;
+        if (element instanceof Repeat) {
+            Repeat repeat = (Repeat) element;
             String bindArrayName = repeat.getBindArray();
             bindingContext.pushArray(bindArrayName);
             bindingContext.pushArrayItem(); // Start first array item

@@ -1,6 +1,4 @@
-package io.github.evillrich.drex.pattern;
-
-import io.github.evillrich.drex.engine.NFA;
+package io.github.evillrich.drex;
 
 import java.util.List;
 import java.util.Objects;
@@ -227,19 +225,58 @@ public final class DrexPattern extends GroupingPatternElement {
     }
 
     /**
-     * Compiles the specified pattern for efficient matching.
+     * Compiles this pattern for efficient matching.
      * <p>
-     * This public static method compiles a DrexPattern and all its child elements,
-     * preparing them for matching operations. This is the preferred way to compile
-     * patterns from client code.
+     * This method compiles the DrexPattern and all its child elements,
+     * preparing them for matching operations. The pattern must be compiled
+     * before it can be used for matching.
      *
-     * @param pattern the pattern to compile, must not be null
-     * @throws IllegalArgumentException if pattern is null
      * @throws PatternCompilationException if the pattern cannot be compiled
      */
     public void compile() {
-        this.compileElement();
-        nfa = NFA.fromPattern(this);
+        try {
+            // Compile all child elements
+            this.compileElement();
+            
+            // Build the NFA from this pattern
+            NFABuilder nfaBuilder = new NFABuilder(this);
+            this.nfa = this.accept(nfaBuilder);
+        } catch (Exception e) {
+            throw new PatternCompilationException("Failed to compile pattern: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Executes pattern matching against the specified document lines.
+     * <p>
+     * This method is package-private and used internally by the public API
+     * to perform pattern matching while keeping engine complexity hidden.
+     * The pattern must be compiled before calling this method.
+     *
+     * @param inputLines the lines of the document to match against, must not be null
+     * @return the match result containing extracted data and metadata, never null
+     * @throws IllegalStateException if the pattern has not been compiled
+     */
+    public io.github.evillrich.drex.DrexMatchResult findMatch(java.util.List<String> inputLines) {
+        if (nfa == null) {
+            throw new IllegalStateException("Pattern must be compiled before matching. Call compile() first.");
+        }
+        
+        try {
+            // Create simulator and execute matching
+            GreedyOnePassSimulator simulator = new GreedyOnePassSimulator(nfa, this.editDistance);
+            SimulationResult simulationResult = simulator.simulate(inputLines);
+            
+            // Wrap the internal result for the public API
+            return new DrexMatchResult(simulationResult);
+            
+        } catch (Exception e) {
+            // Convert any internal exceptions to a failed match result
+            return DrexMatchResult.failure(
+                "Pattern matching failed: " + e.getMessage(), 
+                inputLines.size()
+            );
+        }
     }
 
     /**
@@ -357,6 +394,22 @@ public final class DrexPattern extends GroupingPatternElement {
     @Override
     public int hashCode() {
         return Objects.hash(version, name, comment, bindObject, editDistance, elements);
+    }
+
+    /**
+     * Creates a new DrexMatcher for this pattern.
+     * <p>
+     * This is a convenience method equivalent to {@code new DrexMatcher(this)}.
+     * The returned matcher can be used to execute pattern matching operations
+     * against document text.
+     *
+     * @return a new DrexMatcher configured with this pattern, never null
+     * @throws RuntimeException if the pattern cannot be compiled into an NFA
+     * @since 1.0
+     * @see DrexMatcher
+     */
+    public DrexMatcher matcher() {
+        return new DrexMatcher(this);
     }
 
     /**

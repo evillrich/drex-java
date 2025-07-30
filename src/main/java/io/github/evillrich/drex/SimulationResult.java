@@ -1,4 +1,4 @@
-package io.github.evillrich.drex.engine;
+package io.github.evillrich.drex;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -14,7 +14,7 @@ import java.util.Objects;
  *
  * @since 1.0
  */
-public final class SimulationResult {
+final class SimulationResult {
     private final boolean success;
     private final Map<String, Object> extractedData;
     private final int linesProcessed;

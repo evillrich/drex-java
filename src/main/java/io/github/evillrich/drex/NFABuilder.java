@@ -1,5 +1,4 @@
-package io.github.evillrich.drex.engine;
-import io.github.evillrich.drex.pattern.*;
+package io.github.evillrich.drex;
 
 import java.util.List;
 
@@ -29,7 +28,7 @@ import java.util.List;
  * @see NFA
  * @see DrexPattern
  */
-public class NFABuilder implements PatternVisitor<NFA> {
+class NFABuilder implements PatternVisitor<NFA> {
 
     private final DrexPattern rootPattern;
     private int stateCounter = 0;

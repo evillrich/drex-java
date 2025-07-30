@@ -1,8 +1,5 @@
-package io.github.evillrich.drex.engine;
+package io.github.evillrich.drex;
 
-import io.github.evillrich.drex.pattern.CompositePatternElement;
-import io.github.evillrich.drex.pattern.GroupingPatternElement;
-import io.github.evillrich.drex.pattern.LineElement;
 import java.util.Objects;
 
 /**
@@ -15,7 +12,7 @@ import java.util.Objects;
  *
  * @since 1.0
  */
-public final class Transition {
+final class Transition {
 
     /**
      * Represents the type of edit operation performed during fuzzy matching.

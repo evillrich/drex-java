@@ -1,4 +1,4 @@
-package io.github.evillrich.drex.pattern;
+package io.github.evillrich.drex;
 
 /**
  * Abstract base class for pattern elements that create JSON object contexts.
@@ -13,7 +13,7 @@ package io.github.evillrich.drex.pattern;
  * @see DrexPattern
  * @see Group
  */
-public abstract class GroupingPatternElement extends CompositePatternElement {
+abstract class GroupingPatternElement extends CompositePatternElement {
 
     /**
      * Returns the name of the JSON object that this element creates.

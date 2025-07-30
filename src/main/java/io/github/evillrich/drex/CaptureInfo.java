@@ -1,4 +1,4 @@
-package io.github.evillrich.drex.engine;
+package io.github.evillrich.drex;
 
 import java.util.Objects;
 
@@ -17,7 +17,7 @@ import java.util.Objects;
  *
  * @since 1.0
  */
-public final class CaptureInfo {
+final class CaptureInfo {
 
     private final String path;
     private final String originalValue;

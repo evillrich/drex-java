@@ -1,7 +1,24 @@
 {
   "permissions": {
     "allow": [
-      "Bash(./gradlew:*)"
+      "Bash(./gradlew:*)",
+      "Bash(\"/c/Program Files/Java/jdk-24/bin/javac\" -cp . io/github/evillrich/drex/pattern/DrexPattern.java)",
+      "Bash(for file in *.java)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(head:*)",
+      "Bash(done)",
+      "Bash(for file in GroupingPatternElement.java LineElement.java LineMatchResult.java DrexPattern.java Group.java Line.java Anyline.java Or.java Repeat.java)",
+      "Bash(do cp \"$file\" \"../$file\")",
+      "Bash(sed:*)",
+      "Bash(find:*)",
+      "Bash(for file in NFA.java NFABuilder.java NFASimulator.java GreedyOnePassSimulator.java SimulationResult.java State.java Transition.java BindingContext.java CaptureInfo.java ContextFrame.java)",
+      "Bash(do sed -i 's/^public class /class /' \"$file\")",
+      "Bash(\"/c/Program Files/Java/jdk-24/bin/javac\" -version)",
+      "Bash(\"/c/Program Files/Java/jdk-24/bin/javac\" -cp . io/github/evillrich/drex/DrexPattern.java)",
+      "Bash(rm:*)",
+      "Bash(\"/c/Program Files/Java/jdk-24/bin/javac\" -cp . io/github/evillrich/drex/Line.java)",
+      "Bash(\"/c/Program Files/Java/jdk-24/bin/javac\" -cp . io/github/evillrich/drex/PropertyBinding.java)",
+      "Bash(export:*)"
     ],
     "deny": []
   }

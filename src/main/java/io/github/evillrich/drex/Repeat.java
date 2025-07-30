@@ -1,4 +1,4 @@
-package io.github.evillrich.drex.pattern;
+package io.github.evillrich.drex;
 
 import java.util.List;
 import java.util.Objects;
