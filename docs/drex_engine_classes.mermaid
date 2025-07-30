@@ -1,0 +1,123 @@
+classDiagram
+    class DrexEngine {
+        <<utility>>
+        +match(pattern, documentText) MatchResult
+        +match(pattern, documentText, options) MatchResult
+        +validatePattern(pattern) boolean
+    }
+
+    class MatchResult {
+        -boolean success
+        -Map~string, Object~ extractedData
+        -int linesProcessed
+        -int linesMatched
+        -string errorMessage
+        +isSuccess() boolean
+        +getExtractedData() Map~string, Object~
+        +toJson() string
+        +toJsonSafe() string
+        +getLinesProcessed() int
+        +getLinesMatched() int
+        +getErrorMessage() string
+        +fromSimulation(result, rootBinding) MatchResult
+    }
+
+    class MatchOptions {
+        -Integer editDistance
+        -Boolean enableDebugOutput
+        -Integer maxLinesProcessed
+        +getEditDistance() Integer
+        +getEnableDebugOutput() Boolean
+        +getMaxLinesProcessed() Integer
+        +builder() Builder
+    }
+
+    class Builder {
+        -Integer editDistance
+        -Boolean enableDebugOutput
+        -Integer maxLinesProcessed
+        +editDistance(distance) Builder
+        +enableDebugOutput(enable) Builder
+        +maxLinesProcessed(maxLines) Builder
+        +build() MatchOptions
+    }
+
+    class DrexPattern {
+        -string version
+        -string name
+        -string comment
+        -string bindObject
+        -Integer editDistance
+        -List~PatternElement~ elements
+        +getVersion() string
+        +getName() string
+        +getComment() string
+        +getBindObject() string
+        +getEditDistance() Integer
+        +getElements() List~PatternElement~
+        +compileElement() void
+        +accept(visitor) T
+    }
+
+    class PatternElement {
+        <<abstract>>
+        +getComment() string
+        +compileElement() void
+        +accept(visitor) T
+    }
+
+    class GreedyOnePassSimulator {
+        -NFA nfa
+        -int editDistance
+        +simulate(lines) SimulationResult
+    }
+
+    class SimulationResult {
+        -boolean success
+        -Map~string, Object~ extractedData
+        -int linesProcessed
+        -int linesMatched
+        -string failureReason
+        +isSuccess() boolean
+        +getExtractedData() Map~string, Object~
+        +getLinesProcessed() int
+        +getLinesMatched() int
+        +getFailureReason() string
+    }
+
+    class NFA {
+        -State initialState
+        -State finalState
+        +getInitialState() State
+        +getFinalState() State
+    }
+
+    class NFABuilder {
+        +buildFromPattern(pattern) NFA
+        +addState() State
+        +addTransition(from, to, operation) Transition
+    }
+
+%% Relationships
+    DrexEngine --> DrexPattern : uses
+    DrexEngine --> MatchResult : returns
+    DrexEngine --> MatchOptions : uses
+    DrexEngine --> GreedyOnePassSimulator : uses
+    DrexEngine --> NFABuilder : uses
+    
+    MatchResult --> SimulationResult : converts from
+    MatchOptions *-- Builder : nested class
+    
+    DrexPattern --> PatternElement : contains
+    
+    GreedyOnePassSimulator --> SimulationResult : produces
+    GreedyOnePassSimulator --> NFA : uses
+    
+    NFABuilder --> NFA : creates
+    NFABuilder --> DrexPattern : reads
+
+%% Notes
+%% DrexEngine is the main entry point for the library
+%% MatchResult provides both success/failure state and extracted JSON data
+%% MatchOptions allows runtime configuration overrides
+%% The engine compiles patterns to NFA and simulates matching

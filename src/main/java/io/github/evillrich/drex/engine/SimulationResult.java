@@ -1,5 +1,8 @@
 package io.github.evillrich.drex.engine;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -13,22 +16,41 @@ import java.util.Objects;
  */
 public final class SimulationResult {
     private final boolean success;
-    private final String extractedData;
+    private final Map<String, Object> extractedData;
     private final int linesProcessed;
-    private final String errorMessage;
+    private final int linesMatched;
+    private final String failureReason;
 
     /**
      * Creates a successful simulation result.
      *
-     * @param extractedData the JSON data extracted during simulation, must not be null
+     * @param extractedData the structured data extracted during simulation, must not be null
      * @param linesProcessed the number of document lines processed
-     * @throws IllegalArgumentException if extractedData is null or linesProcessed is negative
+     * @param linesMatched the number of lines that matched patterns
+     * @throws IllegalArgumentException if extractedData is null or line counts are negative
      */
-    public SimulationResult(String extractedData, int linesProcessed) {
+    public SimulationResult(Map<String, Object> extractedData, int linesProcessed, int linesMatched) {
         this.success = true;
-        this.extractedData = Objects.requireNonNull(extractedData, "Extracted data cannot be null");
+        this.extractedData = Collections.unmodifiableMap(new LinkedHashMap<>(
+            Objects.requireNonNull(extractedData, "Extracted data cannot be null")));
         this.linesProcessed = validateLinesProcessed(linesProcessed);
-        this.errorMessage = null;
+        this.linesMatched = validateLinesMatched(linesMatched);
+        this.failureReason = null;
+    }
+
+    /**
+     * Creates a failed simulation result.
+     *
+     * @param failureReason the reason for simulation failure, must not be null
+     * @param linesProcessed the number of lines processed before failure
+     * @throws IllegalArgumentException if failureReason is null or linesProcessed is negative
+     */
+    public SimulationResult(String failureReason, int linesProcessed) {
+        this.success = false;
+        this.extractedData = Collections.emptyMap();
+        this.linesProcessed = validateLinesProcessed(linesProcessed);
+        this.linesMatched = 0;
+        this.failureReason = Objects.requireNonNull(failureReason, "Failure reason cannot be null");
     }
 
     private static int validateLinesProcessed(int linesProcessed) {
@@ -36,6 +58,13 @@ public final class SimulationResult {
             throw new IllegalArgumentException("Lines processed cannot be negative: " + linesProcessed);
         }
         return linesProcessed;
+    }
+
+    private static int validateLinesMatched(int linesMatched) {
+        if (linesMatched < 0) {
+            throw new IllegalArgumentException("Lines matched cannot be negative: " + linesMatched);
+        }
+        return linesMatched;
     }
 
     /**
@@ -48,12 +77,21 @@ public final class SimulationResult {
     }
 
     /**
-     * Returns the extracted JSON data from a successful simulation.
+     * Returns the extracted structured data from a successful simulation.
      *
-     * @return the extracted data as JSON string, or null if the simulation failed
+     * @return the extracted data as a Map, never null but may be empty if simulation failed
      */
-    public String getExtractedData() {
+    public Map<String, Object> getExtractedData() {
         return extractedData;
+    }
+
+    /**
+     * Returns the number of lines that matched patterns during simulation.
+     *
+     * @return the number of lines matched, always non-negative
+     */
+    public int getLinesMatched() {
+        return linesMatched;
     }
 
     /**
@@ -66,12 +104,12 @@ public final class SimulationResult {
     }
 
     /**
-     * Returns the error message from a failed simulation.
+     * Returns the failure reason from a failed simulation.
      *
-     * @return the error message, or null if the simulation was successful
+     * @return the failure reason, or null if the simulation was successful
      */
-    public String getErrorMessage() {
-        return errorMessage;
+    public String getFailureReason() {
+        return failureReason;
     }
 
     @Override
@@ -81,23 +119,24 @@ public final class SimulationResult {
         SimulationResult that = (SimulationResult) obj;
         return success == that.success &&
                linesProcessed == that.linesProcessed &&
+               linesMatched == that.linesMatched &&
                Objects.equals(extractedData, that.extractedData) &&
-               Objects.equals(errorMessage, that.errorMessage);
+               Objects.equals(failureReason, that.failureReason);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(success, extractedData, linesProcessed, errorMessage);
+        return Objects.hash(success, extractedData, linesProcessed, linesMatched, failureReason);
     }
 
     @Override
     public String toString() {
         if (success) {
-            return String.format("SimulationResult{success=true, linesProcessed=%d, dataLength=%d}", 
-                               linesProcessed, extractedData != null ? extractedData.length() : 0);
+            return String.format("SimulationResult{success=true, linesProcessed=%d, linesMatched=%d, dataKeys=%s}", 
+                               linesProcessed, linesMatched, extractedData.keySet());
         } else {
             return String.format("SimulationResult{success=false, linesProcessed=%d, error='%s'}", 
-                               linesProcessed, errorMessage);
+                               linesProcessed, failureReason);
         }
     }
 }

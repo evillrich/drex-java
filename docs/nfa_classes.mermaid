@@ -24,6 +24,27 @@ classDiagram
 
     class GreedyOnePassSimulator {
         -NFA nfa
+        -int editDistance
+        +simulate(lines) SimulationResult
+    }
+
+    class NFABuilder {
+        +buildFromPattern(pattern) NFA
+        +addState() State
+        +addTransition(from, to, operation) Transition
+    }
+
+    class SimulationResult {
+        -boolean success
+        -Map~string, Object~ extractedData
+        -int linesProcessed
+        -int linesMatched
+        -string failureReason
+        +isSuccess() boolean
+        +getExtractedData() Map~string, Object~
+        +getLinesProcessed() int
+        +getLinesMatched() int
+        +getFailureReason() string
     }
 
     class OperationType {
@@ -69,3 +90,7 @@ classDiagram
     Transition --> LineElement : line
     NFASimulator <|-- GreedyOnePassSimulator
     GreedyOnePassSimulator --> NFA
+    GreedyOnePassSimulator --> SimulationResult : produces
+    NFABuilder --> NFA : creates
+    NFABuilder --> State : creates
+    NFABuilder --> Transition : creates
