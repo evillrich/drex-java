@@ -81,15 +81,41 @@ final class GreedyOnePassSimulator implements NFASimulator {
         
         try {
             // Main simulation loop
-            while (currentState != nfa.getFinalState() && lineIndex < documentLines.size()) {
-                String currentLine = documentLines.get(lineIndex);
+            while (currentState != nfa.getFinalState()) {
+                // Handle case where we run out of input lines
+                if (lineIndex >= documentLines.size()) {
+                    // Try epsilon transitions that don't consume input
+                    Transition epsilonTransition = null;
+                    for (Transition transition : currentState.getTransitionsOut()) {
+                        if (isEpsilonTransition(transition) && isTransitionValid(transition, null)) {
+                            epsilonTransition = transition;
+                            break;
+                        }
+                    }
+                    
+                    if (epsilonTransition != null) {
+                        // Execute epsilon transition
+                        executeTransition(epsilonTransition, null, lineIndex, bindingContext);
+                        currentState = epsilonTransition.getToState();
+                        continue;
+                    } else {
+                        // No more transitions available and out of input
+                        break;
+                    }
+                }
+                
+                String currentLine = lineIndex < documentLines.size() ? documentLines.get(lineIndex) : null;
                 
                 // Find the next transition to follow
                 Transition transition = selectTransition(currentState, currentLine);
                 if (transition == null) {
+                    // If we tried to process a line but couldn't find a transition, 
+                    // count it as processed for reporting purposes
+                    int linesProcessedCount = (currentLine != null) ? lineIndex + 1 : lineIndex;
                     return new SimulationResult(
-                        "No valid transition found at line " + lineIndex + ": " + currentLine,
-                        lineIndex
+                        "No valid transition found at line " + lineIndex + 
+                        (currentLine != null ? ": " + currentLine : " (end of input)"),
+                        linesProcessedCount
                     );
                 }
                 
@@ -128,6 +154,7 @@ final class GreedyOnePassSimulator implements NFASimulator {
      * <p>
      * This implements the greedy selection strategy:
      * - For MatchLine transitions, try exact match first, then fuzzy if enabled
+     * - For epsilon transitions (structural), always try first
      * - For branching (Or), try alternatives in order
      * - For repeat, prefer "more" over "zero" when both are available
      *
@@ -138,19 +165,28 @@ final class GreedyOnePassSimulator implements NFASimulator {
     private Transition selectTransition(State currentState, String currentLine) {
         List<Transition> transitions = currentState.getTransitionsOut();
         
-        // Try exact matches first
+        // First, try epsilon transitions (structural transitions that don't consume input)
         for (Transition transition : transitions) {
-            if (transition.getEditOperation() == Transition.EditType.None) {
+            if (isEpsilonTransition(transition) && isTransitionValid(transition, currentLine)) {
+                return transition;
+            }
+        }
+        
+        // Then try exact MatchLine transitions
+        for (Transition transition : transitions) {
+            if (transition.getOperation() == Transition.OperationType.MatchLine && 
+                transition.getEditOperation() == Transition.EditType.None) {
                 if (isTransitionValid(transition, currentLine)) {
                     return transition;
                 }
             }
         }
         
-        // Try fuzzy matches if edit distance > 0
+        // Finally try fuzzy matches if edit distance > 0
         if (editDistance > 0) {
             for (Transition transition : transitions) {
-                if (transition.getEditOperation() != Transition.EditType.None) {
+                if (transition.getOperation() == Transition.OperationType.MatchLine &&
+                    transition.getEditOperation() != Transition.EditType.None) {
                     if (isTransitionValid(transition, currentLine)) {
                         return transition;
                     }
@@ -160,17 +196,44 @@ final class GreedyOnePassSimulator implements NFASimulator {
         
         return null;
     }
+    
+    /**
+     * Checks if a transition is an epsilon (non-consuming) transition.
+     */
+    private boolean isEpsilonTransition(Transition transition) {
+        switch (transition.getOperation()) {
+            case OrSplit:
+            case OrJoin:
+            case RepeatZero:
+            case RepeatOne:
+            case RepeatMore:
+            case RepeatEnd:
+            case StartGroup:
+            case EndGroup:
+            case StartContinuation:
+            case EndContinuation:
+                return true;
+            case MatchLine:
+                return false;
+            default:
+                return false;
+        }
+    }
 
     /**
      * Checks if a transition is valid for the current line.
      *
      * @param transition the transition to check
-     * @param currentLine the current line
+     * @param currentLine the current line (may be null for epsilon transitions)
      * @return true if the transition can be taken, false otherwise
      */
     private boolean isTransitionValid(Transition transition, String currentLine) {
         switch (transition.getOperation()) {
             case MatchLine:
+                // MatchLine requires non-null input
+                if (currentLine == null) {
+                    return false;
+                }
                 LineElement lineElement = transition.getLine();
                 if (lineElement == null) {
                     return false;
@@ -200,7 +263,7 @@ final class GreedyOnePassSimulator implements NFASimulator {
      * Executes a transition and updates the binding context.
      *
      * @param transition the transition to execute
-     * @param currentLine the current line being processed
+     * @param currentLine the current line being processed (may be null for epsilon transitions)
      * @param lineIndex the current line index
      * @param bindingContext the binding context to update
      * @return true if the line index should advance, false otherwise
@@ -242,6 +305,10 @@ final class GreedyOnePassSimulator implements NFASimulator {
      */
     private boolean executeMatchLine(Transition transition, String currentLine, 
                                    int lineIndex, BindingContext bindingContext) {
+        if (currentLine == null) {
+            return false; // Cannot match line with null input
+        }
+        
         LineElement lineElement = transition.getLine();
         LineMatchResult matchResult = lineElement.match(currentLine);
         

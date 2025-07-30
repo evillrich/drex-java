@@ -74,6 +74,18 @@ public final class Line extends LineElement {
     }
 
     /**
+     * Creates a new Line with the specified regex and a single property binding.
+     *
+     * @param comment optional descriptive comment, may be null
+     * @param regex the regular expression pattern to match, must not be null or empty
+     * @param binding the property binding for the captured group, must not be null
+     * @throws IllegalArgumentException if regex is null/empty or binding is null
+     */
+    public Line(String comment, String regex, PropertyBinding binding) {
+        this(comment, regex, List.of(binding));
+    }
+
+    /**
      * Returns the optional comment.
      *
      * @return the comment string, or null if no comment was provided
