@@ -121,26 +121,7 @@ public final class Anyline extends LineElement {
         // This method is idempotent and can be called multiple times safely
     }
 
-    @Override
-    public Pattern getCompiledPattern() {
-        // Anyline uses a simple pattern that matches any non-empty line
-        // This is a placeholder for NFA simulation compatibility
-        return Pattern.compile(".*\\S.*");
-    }
 
-    @Override
-    public LineMatchResult match(String inputLine) {
-        Objects.requireNonNull(inputLine, "inputLine must not be null");
-        
-        // Anyline matches any non-empty line
-        if (inputLine.trim().isEmpty()) {
-            return LineMatchResult.failure();
-        }
-        
-        // For Anyline, there are no regex capture groups, but the entire line
-        // can be bound to properties if bindings are specified
-        return LineMatchResult.success(inputLine, Collections.emptyList());
-    }
 
     @Override
     public <T> T accept(PatternVisitor<T> visitor) {

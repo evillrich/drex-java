@@ -20,7 +20,7 @@ classDiagram
 
     class LineElement {
         <<abstract>>
-        +match(inputLine) LineMatchResult
+        +getBindProperties() List~PropertyBinding~
     }
 
     class DrexPattern {
@@ -98,7 +98,6 @@ classDiagram
         +getCaptureGroupCount() int
         +builder() LineBuilder
         +compileElement() void
-        +match(inputLine) LineMatchResult
         +accept(visitor) T
     }
 
@@ -112,7 +111,6 @@ classDiagram
         +hasBindings() boolean
         +builder() AnylineBuilder
         +compileElement() void
-        +match(inputLine) LineMatchResult
         +accept(visitor) T
     }
 
@@ -138,19 +136,6 @@ classDiagram
         +of(property, format) PropertyBinding
     }
 
-    class LineMatchResult {
-        <<class>>
-        -boolean matched
-        -string matchedText
-        -List~String~ capturedGroups
-        +isMatched() boolean
-        +getMatchedText() string
-        +getCapturedGroups() List~String~
-        +getCaptureCount() int
-        +getCapturedGroup(index) string
-        +success(matchedText, capturedGroups) LineMatchResult
-        +failure() LineMatchResult
-    }
 
 %% Relationships
     PatternElement <|-- CompositePatternElement : extends
@@ -171,8 +156,6 @@ classDiagram
     Repeat *-- Mode : nested enum
     Line "1" *-- "0..many" PropertyBinding : bindProperties
     Anyline "1" *-- "0..many" PropertyBinding : bindProperties
-    Line --> LineMatchResult : returns
-    Anyline --> LineMatchResult : returns
 
 %% Self-referencing for recursive structure
     PatternElement ..> PatternElement : references
