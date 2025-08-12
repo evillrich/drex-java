@@ -28,8 +28,8 @@ public final class DrexPattern extends GroupingPatternElement {
     /**
      * Creates a DrexPattern with validation and immutable list creation.
      *
-     * @param version the pattern version string, never null or empty
-     * @param name the pattern name, never null or empty
+     * @param version the pattern version string, may be null or empty
+     * @param name the pattern name, may be null or empty
      * @param comment optional descriptive comment, may be null
      * @param bindObject the name of the root JSON object, never null or empty
      * @param editDistance the maximum edit distance for fuzzy matching, never negative
@@ -38,12 +38,8 @@ public final class DrexPattern extends GroupingPatternElement {
      */
     public DrexPattern(String version, String name, String comment, String bindObject, 
                        int editDistance, List<PatternElement> elements) {
-        if (version == null || version.trim().isEmpty()) {
-            throw new IllegalArgumentException("version must not be null or empty");
-        }
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("name must not be null or empty");
-        }
+        // version and name are optional metadata fields
+        // They can be null or empty strings
         if (bindObject == null || bindObject.trim().isEmpty()) {
             throw new IllegalArgumentException("bindObject must not be null or empty");
         }
@@ -59,9 +55,9 @@ public final class DrexPattern extends GroupingPatternElement {
             }
         }
         
-        // Trim strings and create immutable list
-        this.version = version.trim();
-        this.name = name.trim();
+        // Trim strings and create immutable list (handle nulls for optional fields)
+        this.version = version != null ? version.trim() : null;
+        this.name = name != null ? name.trim() : null;
         this.comment = comment;
         this.bindObject = bindObject.trim();
         this.editDistance = editDistance;
@@ -71,8 +67,8 @@ public final class DrexPattern extends GroupingPatternElement {
     /**
      * Creates a new DrexPattern with the specified properties.
      *
-     * @param version the pattern version string, must not be null or empty
-     * @param name the pattern name, must not be null or empty
+     * @param version the pattern version string, may be null or empty  
+     * @param name the pattern name, may be null or empty
      * @param comment optional descriptive comment, may be null
      * @param bindObject the name of the root JSON object, must not be null or empty
      * @param editDistance the maximum edit distance for fuzzy matching, must be non-negative
@@ -87,7 +83,7 @@ public final class DrexPattern extends GroupingPatternElement {
     /**
      * Returns the pattern version string.
      *
-     * @return the version string, never null or empty
+     * @return the version string, may be null or empty
      */
     public String version() {
         return version;
@@ -96,7 +92,7 @@ public final class DrexPattern extends GroupingPatternElement {
     /**
      * Returns the pattern name.
      *
-     * @return the pattern name, never null or empty
+     * @return the pattern name, may be null or empty
      */
     public String name() {
         return name;
@@ -186,7 +182,7 @@ public final class DrexPattern extends GroupingPatternElement {
     /**
      * Returns the version string of this pattern.
      *
-     * @return the version string, never null or empty
+     * @return the version string, may be null or empty
      */
     public String getVersion() {
         return version;
@@ -195,7 +191,7 @@ public final class DrexPattern extends GroupingPatternElement {
     /**
      * Returns the name of this pattern.
      *
-     * @return the pattern name, never null or empty
+     * @return the pattern name, may be null or empty
      */
     public String getName() {
         return name;
@@ -285,13 +281,13 @@ public final class DrexPattern extends GroupingPatternElement {
      * @return a new DrexPattern instance for fluent construction
      */
     public static DrexPattern builder() {
-        return new DrexPattern("", "", null, "", 0, List.of());
+        return new DrexPattern(null, null, null, "root", 0, List.of());
     }
 
     /**
      * Sets the version for this pattern.
      *
-     * @param version the pattern version string, must not be null or empty
+     * @param version the pattern version string, may be null or empty
      * @return a new DrexPattern instance for method chaining
      */
     public DrexPattern version(String version) {
@@ -301,7 +297,7 @@ public final class DrexPattern extends GroupingPatternElement {
     /**
      * Sets the name for this pattern.
      *
-     * @param name the pattern name, must not be null or empty
+     * @param name the pattern name, may be null or empty
      * @return a new DrexPattern instance for method chaining
      */
     public DrexPattern name(String name) {
